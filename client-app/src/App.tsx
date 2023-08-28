@@ -1,26 +1,31 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import MainView from './views/MainView';
+import config from './config.json';
+import LocationView from './views/LocationView';
+import NotFoundView from './views/NotFoundView';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+  const router = createBrowserRouter([
+    {
+      path: config.mainViewClientEndpoint,
+      element: <MainView />
+    },
+    {
+      path: `${config.locationViewClientEndpoint}`,
+      element: <LocationView />,
+    },
+    {
+      path: "*",
+      element: <NotFoundView />
+    }
+]);
+
+return (
+    <>
+      <h3 className="text-center mt-3">Hot Desk Booking System</h3>
+      <RouterProvider router={router}/>
+    </>
+  )
 }
 
 export default App;
