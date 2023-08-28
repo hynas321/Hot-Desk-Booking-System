@@ -4,9 +4,11 @@ import Button from '../components/Button';
 import config from './../config.json';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import Popup from '../components/Popup';
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
+  const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,23 +16,19 @@ export default function LocationsView() {
 
     const location1: Location = {
       locationName: 'Office A',
+      deskCount: 2
     }
   
     const location2: Location = {
       locationName: 'Office B',
+      deskCount: 2
     }
   
     setLocations([...locations, location1, location2]);
   }, [])
 
   const handleAddButtonClick = () => {
-    //TODO: Open a pop-up window and ask for a name
-
-    const location3: Location = {
-      locationName: "Office C"
-    }
-
-    setLocations([...locations, location3])
+    setIsPopupVisible(true);
   }
 
   const handleChooseLocationButtonClick = (locationName: string) => {
@@ -44,9 +42,28 @@ export default function LocationsView() {
     setLocations(newLocations);
   }
 
+  const handlePopupSubmit = (locationName: string) => {
+    //TODO: API CALL
+    setIsPopupVisible(false);
+
+    const newLocation: Location = {
+      locationName: locationName,
+      deskCount: 0
+    };
+
+    setLocations([...locations, newLocation]);
+  }
+
   return (
     <>
       <h4>Locations</h4>
+      <Popup 
+        title={"Name a new location"}
+        inputFormPlaceholderText={"Insert the name here"}
+        visible={isPopupVisible}
+        onSubmit={handlePopupSubmit}
+        onClose={() => setIsPopupVisible(false)}
+      />
       <Button
         text={"Add location"}
         active={true}

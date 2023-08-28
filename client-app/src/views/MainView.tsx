@@ -6,19 +6,22 @@ export default function MainView() {
   const navigate = useNavigate();
 
   const handleOnStartButtonClick = () => {
-    navigate(`${config.locationsViewClientEndpoint}`, { state: { locationName: "Abc" } });
+    navigate(`${config.locationsViewClientEndpoint}`);
   }
 
   return (
-    <div className="text-center">
-      <Button
-        text={"Start"}
-        active={true}
-        spacing={0}
-        type={"success"}
-        onClick={handleOnStartButtonClick}
-      />
-    </div>
+    <>
+      <h3 className="text-center mt-5">Todo signup/signin screen</h3>
+      <div className="text-center mt-2">
+        <Button
+          text={"Start"}
+          active={true}
+          spacing={0}
+          type={"success"}
+          onClick={handleOnStartButtonClick}
+        />
+      </div>
+    </>
   )
 }
   

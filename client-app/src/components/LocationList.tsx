@@ -16,7 +16,8 @@ export default function LocationList({locations, onChooseClick, onRemoveClick}: 
           <li
             key={index}
             className="list-group-item">
-              <div>{`${location.locationName}`}</div>
+              <div><b>{`${location.locationName}`}</b></div>
+              <div className="mb-2">{`Number of desks: ${location.deskCount}`}</div>
               <Button
                 text="Choose location"
                 active={true}
@@ -34,7 +35,7 @@ export default function LocationList({locations, onChooseClick, onRemoveClick}: 
           </li>
         )
       }
-    </ul>
+      </ul>
     </>
   )
 }

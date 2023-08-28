@@ -1,3 +1,4 @@
 export type Location = {
-  locationName: string
+  locationName: string,
+  deskCount: number
 }

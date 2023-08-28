@@ -2,9 +2,16 @@ import DeskList from '../components/DeskList';
 import Button from '../components/Button';
 import { useEffect, useState } from 'react';
 import { Desk } from '../types/Desk'
+import Popup from '../components/Popup';
+import { useLocation, useNavigate } from 'react-router-dom';
+import config from './../config.json';
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
+  const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { locationName } = location.state ?? "-";
 
   useEffect(() => {
     //TODO: Fetch desks from the server based on location name
@@ -12,34 +19,26 @@ export default function DesksView() {
     const desk1: Desk = {
       deskName: 'Desk 1',
       locationName: 'Office A',
-      holderName: null
+      bookerName: null
     }
   
     const desk2: Desk = {
       deskName: 'Desk 2',
       locationName: 'Office B',
-      holderName: "A"
+      bookerName: "A"
     }
   
     setDesks([...desks, desk1, desk2]);
   }, [])
 
   const handleAddButtonClick = () => {
-    //TODO: Open a pop-up window and ask for a name
-
-    let desk3: Desk = {
-      deskName: 'Desk 3',
-      locationName: 'Office C',
-      holderName: null
-    }
-
-    setDesks([...desks, desk3])
+    setIsPopupVisible(true);
   }
 
   const handleBookButtonClick = (index: number) => {
-    //TODO: API call
+    //TODO: API call, add bookerName
 
-    const modifiedDesk = { ...desks[index], holderName: "YOUR_HOLDER_NAME" };
+    const modifiedDesk = { ...desks[index], bookerName: "YOUR_HOLDER_NAME" };
     const newDesks = desks.map((desk, i) => (i === index ? modifiedDesk : desk));
     setDesks(newDesks);
   }
@@ -50,15 +49,48 @@ export default function DesksView() {
     const newDesks = desks.filter((_, i) => i !== index);
     setDesks(newDesks);
   }
+
+  const handlePopupSubmit = (deskName: string) => {
+    //TODO: API CALL
+
+    setIsPopupVisible(false);
+
+    const newDesk: Desk = {
+      deskName: deskName,
+      locationName: locationName,
+      bookerName: null
+    };
+
+    setDesks([...desks, newDesk]);
+  }
+
+  const handleGoBackButtonClick = () => {
+    navigate(`${config.locationsViewClientEndpoint}`);
+  }
+
   return (
     <>
-      <h4>Desks</h4>
+      <h4>{"Desks in location: "}<b>{`${locationName}`}</b></h4>
+      <Popup 
+        title={"Name a new desk"}
+        inputFormPlaceholderText={"Insert the name here"}
+        visible={isPopupVisible}
+        onSubmit={handlePopupSubmit}
+        onClose={() => setIsPopupVisible(false)}
+      />
       <Button
         text={"Add desk"}
         active={true}
         spacing={0}
         type={"success"}
         onClick={handleAddButtonClick}
+      />
+      <Button
+        text= {"Return to locations"}
+        active={true}
+        spacing={2}
+        type={"secondary"}
+        onClick={handleGoBackButtonClick}
       />
       <DeskList
         desks={desks}

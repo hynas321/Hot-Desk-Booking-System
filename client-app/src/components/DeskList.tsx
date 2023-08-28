@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Desk } from '../types/Desk'
 import Button from './Button'
+import Range from './Range'
 
 interface DeskListProps {
   desks: Desk[],
@@ -8,6 +10,8 @@ interface DeskListProps {
 }
 
 export default function DeskList({desks, onBookClick, onRemoveClick}: DeskListProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  
   return (
     <>
       <ul className="list-group mt-3">
@@ -15,25 +19,43 @@ export default function DeskList({desks, onBookClick, onRemoveClick}: DeskListPr
           desks.map((desk: Desk, index) =>
             <li 
               key={index}
-              className={`list-group-item ${desk.holderName === null ? "bg-white" : "bg-light"}`}>
-                <div>{`${desk.deskName}`}</div>
-                <div className={`d-flex ${desk.holderName === null ? "text-success" : "text-danger"}`}>
-                  {`${desk.holderName === null ? "AVAILABLE" : "BOOKED"}`}
-                </div>
+              className={`list-group-item ${desk.bookerName === null ? "bg-white" : "bg-light"}`}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              <div><b>{`${desk.deskName}`}</b></div>
+              <div className={`d-flex mb-2 ${desk.bookerName === null ? "text-success" : "text-danger"}`}>
+                {`${desk.bookerName === null ? "AVAILABLE" : "BOOKED"}`}
+              </div>
+              <div className="d-flex">
                 <Button
                   text="Book desk"
-                  active={desk.holderName === null}
+                  active={desk.bookerName === null}
                   spacing={0}
                   type="primary"
                   onClick={() => onBookClick(index)}
                 />
                 <Button
                   text="Remove"
-                  active={desk.holderName === null}
+                  active={desk.bookerName === null}
                   spacing={3}
                   type="danger"
                   onClick={() => onRemoveClick(index)}
                 />
+                { 
+                  desk.bookerName === null && hoveredIndex === index && (
+                    <Range
+                      title={"Booking timespan"}
+                      suffix={"days"}
+                      minValue={1}
+                      maxValue={7}
+                      step={1}
+                      defaultValue={1}
+                      onChange={() => {}}
+                    />
+                  )
+                }
+              </div>  
             </li>
           )
         }
