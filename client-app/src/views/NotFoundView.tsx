@@ -1,5 +1,5 @@
 export default function NotFoundView() {
   return (
-    <div>NotFoundView</div>
+    <h3>{"Page not found :("}</h3>
   )
 }

@@ -1,8 +1,9 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import MainView from './views/MainView';
+import LocationsView from './views/LocationsView';
 import config from './config.json';
-import LocationView from './views/LocationView';
+import DesksView from './views/DesksView';
 import NotFoundView from './views/NotFoundView';
+import MainView from './views/MainView';
 
 function App() {
   const router = createBrowserRouter([
@@ -11,8 +12,12 @@ function App() {
       element: <MainView />
     },
     {
-      path: `${config.locationViewClientEndpoint}`,
-      element: <LocationView />,
+      path: config.locationsViewClientEndpoint,
+      element: <LocationsView />
+    },
+    {
+      path: `${config.desksViewClientEndpoint}`,
+      element: <DesksView />,
     },
     {
       path: "*",
@@ -21,10 +26,16 @@ function App() {
 ]);
 
 return (
-    <>
-      <h3 className="text-center mt-3">Hot Desk Booking System</h3>
-      <RouterProvider router={router}/>
-    </>
+  <>
+    <div className="container">
+      <div className="row">
+        <h3 className="text-center mt-3">Hot Desk Booking System</h3>
+      </div>
+      <div className="container col-10">
+        <RouterProvider router={router}/>
+      </div>
+    </div>
+  </>
   )
 }
 

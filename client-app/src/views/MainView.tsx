@@ -1,23 +1,24 @@
-import { Location } from '../types/Location'
-import LocationList from '../components/LocationList';
+import { useNavigate } from "react-router-dom";
+import Button from "../components/Button";
+import config from './../config.json';
 
 export default function MainView() {
-  let locations: Location[] = [];
+  const navigate = useNavigate();
 
-  let location1: Location = {
-    locationName: "Abc 1"
+  const handleOnStartButtonClick = () => {
+    navigate(`${config.locationsViewClientEndpoint}`, { state: { locationName: "Abc" } });
   }
-
-  let location2: Location = {
-    locationName: "Abc 2"
-  }
-
-  locations.push(location1);
-  locations.push(location2);
 
   return (
-    <div className="container">
-      <LocationList locations={[location1, location2]} />
+    <div className="text-center">
+      <Button
+        text={"Start"}
+        active={true}
+        spacing={0}
+        type={"success"}
+        onClick={handleOnStartButtonClick}
+      />
     </div>
   )
 }
+  
