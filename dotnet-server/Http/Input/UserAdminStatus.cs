@@ -5,7 +5,9 @@ namespace Dotnet.Server.Http;
 public class UserAdminStatus
 {
 	[Required]
-	public required string Username { get; set; }
+	[MinLength(5)]
+	[MaxLength(20)]
+	public string Username { get; set; } = string.Empty;
 	[Required]
-	public required bool IsAdmin { get; set; }
+	public bool IsAdmin { get; set; }
 }

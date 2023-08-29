@@ -6,7 +6,7 @@ public class SessionTokenManager
 
     public string CreateToken(string username)
     {
-        string token = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 8);
+        string token = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 16);
         tokens.Add(token, username);
 
         return token;
@@ -17,8 +17,20 @@ public class SessionTokenManager
         return tokens.Remove(token);
     }
 
-    public bool CheckIfUserLoggedIn(string token)
+    public string? GetUsername(string token)
     {
-        return tokens.Any(x => x.Key == token);
+        if (tokens.TryGetValue(token, out string? username))
+        {
+            return username;
+        }
+        else
+        {
+            return null; 
+        }
+    }
+
+    public Dictionary<string, string> GetAllSessions()
+    {
+        return tokens;
     }
 }

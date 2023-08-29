@@ -29,7 +29,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("Add")]
-    public async Task<IActionResult> Add([FromBody] UserCredentials userCredentials)
+    public IActionResult Add([FromBody] UserCredentials userCredentials)
     {
         try
         {
@@ -59,6 +59,41 @@ public class UserController : ControllerBase
         }
     }
 
+    [HttpDelete("Remove")]
+    public IActionResult Remove([FromHeader] string globalAdminToken, [FromBody] UserUsername username)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogError("Remove: Status 400, Bad Request");
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            {
+                logger.LogError("Remove: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            bool userRemoved = userRepository.RemoveUser(username.Username);
+
+            if (!userRemoved)
+            {
+                logger.LogInformation("Remove: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+            
+            logger.LogInformation("Remove: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpPost("LogIn")]
     public IActionResult LogIn([FromBody] UserCredentials userCredentials)
     {
@@ -70,11 +105,11 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            User user = userRepository.GetUser(userCredentials.Username);
+            User? user = userRepository.GetUser(userCredentials.Username);
 
             if (user == null)
             {
-                logger.LogInformation("LogIn: Status 404, NotFound");
+                logger.LogInformation("LogIn: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
@@ -97,14 +132,14 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("LogOut")]
+    [HttpPut("LogOut")]
     public IActionResult LogOut([FromHeader] string token)
     {
         try
         {
             if (token == null || token == "")
             {
-                logger.LogError("LogIn: Status 400, Bad Request");
+                logger.LogError("LogOut: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
@@ -125,11 +160,11 @@ public class UserController : ControllerBase
     {
         try
         {
-            User user = userRepository.GetUser(username);
+            User? user = userRepository.GetUser(username);
 
             if (user == null)
             {
-                logger.LogInformation("IsAdmin: Status 404, NotFound");
+                logger.LogInformation("IsAdmin: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
@@ -145,7 +180,7 @@ public class UserController : ControllerBase
 
     [HttpPut("SetAdmin")]
     public IActionResult SetAdmin(
-        [FromHeader] string adminToken,
+        [FromHeader] string globalAdminToken,
         [FromBody] UserAdminStatus userAdminStatus
     )
     {
@@ -157,7 +192,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (adminToken != configuration[Config.AdminToken])
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
             {
                 logger.LogError("SetAdmin: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
@@ -167,7 +202,7 @@ public class UserController : ControllerBase
 
             if (!statusSet)
             {
-                logger.LogInformation("SetAdmin: Status 404, NotFound");
+                logger.LogInformation("SetAdmin: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
@@ -182,11 +217,11 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string adminToken)
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
     {
         try
         {
-            if (adminToken != configuration[Config.AdminToken])
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
             {
                 logger.LogError("GetAll: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
@@ -196,6 +231,30 @@ public class UserController : ControllerBase
 
             logger.LogInformation("GetAll: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, users);
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("GetAllSessions")]
+    public IActionResult GetAllSessions([FromHeader] string globalAdminToken)
+    {
+        try
+        {
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            {
+                logger.LogError("GetAllSessions: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            Dictionary<string, string> sessions = tokenManager.GetAllSessions();
+
+            logger.LogInformation("GetAllSessions: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, sessions);
 
         }
         catch (Exception ex)

@@ -8,6 +8,8 @@ public class ApplicationDbContext : DbContext
     public ApplicationDbContext() {}
 
     public DbSet<User>? Users { get; set; }
+    public DbSet<Location>? Locations { get; set; }
+    public DbSet<Desk>? Desks { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
