@@ -1,4 +1,4 @@
-namespace Dotnet.Server.Authentication;
+namespace Dotnet.Server.Managers;
 
 public class SessionTokenManager
 {

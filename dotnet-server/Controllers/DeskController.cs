@@ -1,38 +1,38 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
-using Microsoft.AspNetCore.Mvc;
 using dotnet_server.Configuration;
+using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class LocationController : ControllerBase
+public class DeskController : ControllerBase
 {
     private readonly ILogger<LocationController> logger;
     private readonly IConfiguration configuration;
     private readonly UserRepository userRepository;
-    private readonly LocationRepository locationRepository;
+    private readonly DeskRepository deskRepository;
     private readonly SessionTokenManager tokenManager;
 
-    public LocationController(
+    public DeskController(
         ILogger<LocationController> logger,
         IConfiguration configuration,
         UserRepository userRepository,
-        LocationRepository locationRepository,
+        DeskRepository deskRepository,
         SessionTokenManager tokenManager
     )
     {
         this.logger = logger;
         this.configuration = configuration;
         this.userRepository = userRepository;
-        this.locationRepository = locationRepository;
+        this.deskRepository = deskRepository;
         this.tokenManager = tokenManager;
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] LocationName locationName)
+    public IActionResult Add([FromHeader] string token, [FromBody] DeskInformation deskInformation)
     {
         try
         {
@@ -52,21 +52,19 @@ public class LocationController : ControllerBase
 
             User? user = userRepository.GetUser(username);
 
-            if (user == null || user.IsAdmin == false)
+            if (user == null || user.IsAdmin)
             {
                 logger.LogError("Add: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Location? location = locationRepository.GetLocation(locationName.Name);
+            bool deskAdded = deskRepository.AddDesk(deskInformation);
 
-            if (location != null)
+            if (!deskAdded)
             {
-                logger.LogInformation("Remove: Status 200, OK");
-                return StatusCode(StatusCodes.Status200OK);
+                logger.LogInformation("Add: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
             }
-
-            locationRepository.AddLocation(locationName.Name);
 
             logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
@@ -79,7 +77,7 @@ public class LocationController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] LocationName locationName)
+    public IActionResult Remove([FromHeader] string token, [FromBody] DeskInformation deskInformation)
     {
         try
         {
@@ -105,42 +103,16 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Location? location = locationRepository.GetLocation(locationName.Name);
+            bool deskRemoved = deskRepository.RemoveDesk(deskInformation);
 
-            if (location == null)
+            if (!deskRemoved)
             {
                 logger.LogInformation("Remove: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            locationRepository.RemoveLocation(locationName.Name);
-
             logger.LogInformation("Remove: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-    }
-
-    [HttpGet("GetAllNames")]
-    public async Task<IActionResult> GetAllNames()
-    {
-        try
-        {
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
-            List<string> locationNames = new List<string>();
-
-            foreach(var location in locations)
-            {
-                locationNames.Add(location.LocationName);
-            }
-
-            logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, locationNames);
-
         }
         catch (Exception ex)
         {
@@ -160,11 +132,73 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
+            List<Desk> desks = await deskRepository.GetAllDesksAsync();
 
             logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, locations);
+            return StatusCode(StatusCodes.Status200OK, desks);
 
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPut("Book")]
+    public IActionResult Book([FromHeader] string token, [FromBody] BookingInformation bookingInformation)
+    {
+        //To finish
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogError("BookDesk: Status 400, Bad Request");
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogInformation("BookDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            deskRepository.BookDesk(username, bookingInformation);
+
+            return StatusCode(StatusCodes.Status200OK);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPut("Unbook")]
+    public IActionResult Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo)
+    {
+        //To finish
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogError("BookDesk: Status 400, Bad Request");
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogInformation("BookDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            deskRepository.UnbookDesk(deskInfo);
+
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {

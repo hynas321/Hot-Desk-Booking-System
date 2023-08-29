@@ -1,4 +1,4 @@
-using Dotnet.Server.Authentication;
+using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
 using dotnet_server.Configuration;
@@ -94,7 +94,7 @@ public class UserController : ControllerBase
         }
     }
 
-        [HttpGet("GetAll")]
+    [HttpGet("GetAll")]
     public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
     {
         try

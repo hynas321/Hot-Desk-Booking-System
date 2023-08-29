@@ -1,4 +1,3 @@
-using Dotnet.Server.Authentication;
 using Dotnet.Server.Http;
 using Microsoft.EntityFrameworkCore;
 

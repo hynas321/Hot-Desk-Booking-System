@@ -1,4 +1,4 @@
-using Dotnet.Server.Authentication;
+using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<SessionTokenManager>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<LocationRepository>();
+builder.Services.AddScoped<DeskRepository>();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);
 
