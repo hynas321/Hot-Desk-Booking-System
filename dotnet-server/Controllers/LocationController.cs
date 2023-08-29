@@ -1,7 +1,6 @@
 using Dotnet.Server.Authentication;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
-using dotnet_server.Configuration;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_server.Controllers;
@@ -11,21 +10,18 @@ namespace dotnet_server.Controllers;
 public class LocationController : ControllerBase
 {
     private readonly ILogger<LocationController> logger;
-    private readonly IConfiguration configuration;
     private readonly UserRepository userRepository;
     private readonly LocationRepository locationRepository;
     private readonly SessionTokenManager tokenManager;
 
     public LocationController(
         ILogger<LocationController> logger,
-        IConfiguration configuration,
         UserRepository userRepository,
         LocationRepository locationRepository,
         SessionTokenManager tokenManager
     )
     {
         this.logger = logger;
-        this.configuration = configuration;
         this.userRepository = userRepository;
         this.locationRepository = locationRepository;
         this.tokenManager = tokenManager;
@@ -109,13 +105,21 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool locationRemoved = locationRepository.RemoveLocation(locationName.Name);
+            Location? location = locationRepository.GetLocation(locationName.Name);
 
-            if (!locationRemoved)
+            if (location == null)
             {
                 logger.LogInformation("Remove: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
+
+            if (location.Desks.Count != 0)
+            {
+                logger.LogInformation("Remove: Status 409, Conflict");
+                return StatusCode(StatusCodes.Status409Conflict);
+            }
+
+            locationRepository.RemoveLocation(locationName.Name);
 
             logger.LogInformation("Remove: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
@@ -137,6 +141,108 @@ public class LocationController : ControllerBase
             logger.LogInformation("GetAll: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, locations);
 
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpPost("AddDesk")]
+    public IActionResult AddDesk([FromHeader] string token, [FromBody] DeskInformation deskInformation)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogError("AddDesk: Status 400, Bad Request");
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogInformation("AddDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null)
+            {
+                logger.LogInformation("AddDesk: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            if (user.IsAdmin == false)
+            {
+                logger.LogError("AddDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            bool deskAdded = locationRepository.AddDesk(deskInformation.DeskName, deskInformation.LocationName);
+
+            if (!deskAdded)
+            {
+                logger.LogInformation("AddDesk: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            logger.LogInformation("AddDesk: Status 201, Created");
+            return StatusCode(StatusCodes.Status201Created);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpDelete("RemoveDesk")]
+    public IActionResult RemoveDesk([FromHeader] string token, [FromBody] DeskInformation deskInformation)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                logger.LogError("RemoveDesk: Status 400, Bad Request");
+                return StatusCode(StatusCodes.Status400BadRequest);
+            }
+
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogInformation("RemoveDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null)
+            {
+                logger.LogInformation("RemoveDesk: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            if (user.IsAdmin == false)
+            {
+                logger.LogError("RemoveDesk: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            bool deskRemoved = locationRepository.RemoveDesk(deskInformation.DeskName, deskInformation.LocationName);
+
+            if (!deskRemoved)
+            {
+                logger.LogInformation("RemoveDesk: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            logger.LogInformation("RemoveDesk: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {

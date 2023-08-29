@@ -40,26 +40,25 @@ namespace dotnet_server.Migrations
                 columns: table => new
                 {
                     DeskName = table.Column<string>(type: "TEXT", nullable: false),
-                    LocationName = table.Column<string>(type: "TEXT", nullable: false),
-                    BookerUsername = table.Column<string>(type: "TEXT", nullable: false),
-                    BookingStartTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    BookingEndTime = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LocationName1 = table.Column<string>(type: "TEXT", nullable: true)
+                    Username = table.Column<string>(type: "TEXT", nullable: true),
+                    BookingStartTime = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    BookingEndTime = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LocationName = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Desks", x => x.DeskName);
                     table.ForeignKey(
-                        name: "FK_Desks_Locations_LocationName1",
-                        column: x => x.LocationName1,
+                        name: "FK_Desks_Locations_LocationName",
+                        column: x => x.LocationName,
                         principalTable: "Locations",
                         principalColumn: "LocationName");
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Desks_LocationName1",
+                name: "IX_Desks_LocationName",
                 table: "Desks",
-                column: "LocationName1");
+                column: "LocationName");
         }
 
         /// <inheritdoc />

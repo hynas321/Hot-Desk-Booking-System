@@ -21,26 +21,21 @@ namespace dotnet_server.Migrations
                     b.Property<string>("DeskName")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("BookerUsername")
-                        .IsRequired()
+                    b.Property<DateTime?>("BookingEndTime")
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("BookingEndTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("BookingStartTime")
+                    b.Property<DateTime?>("BookingStartTime")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LocationName")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("LocationName1")
+                    b.Property<string>("Username")
                         .HasColumnType("TEXT");
 
                     b.HasKey("DeskName");
 
-                    b.HasIndex("LocationName1");
+                    b.HasIndex("LocationName");
 
                     b.ToTable("Desks");
                 });
@@ -76,7 +71,7 @@ namespace dotnet_server.Migrations
                 {
                     b.HasOne("Location", null)
                         .WithMany("Desks")
-                        .HasForeignKey("LocationName1");
+                        .HasForeignKey("LocationName");
                 });
 
             modelBuilder.Entity("Location", b =>

@@ -94,6 +94,54 @@ public class UserController : ControllerBase
         }
     }
 
+        [HttpGet("GetAll")]
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
+    {
+        try
+        {
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            {
+                logger.LogError("GetAll: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            List<User> users = await userRepository.GetAllUsersAsync();
+
+            logger.LogInformation("GetAll: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, users);
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("GetAllSessions")]
+    public IActionResult GetAllSessions([FromHeader] string globalAdminToken)
+    {
+        try
+        {
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            {
+                logger.LogError("GetAllSessions: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            Dictionary<string, string> sessions = tokenManager.GetAllSessions();
+
+            logger.LogInformation("GetAllSessions: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, sessions);
+
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpPost("LogIn")]
     public IActionResult LogIn([FromBody] UserCredentials userCredentials)
     {
@@ -208,54 +256,6 @@ public class UserController : ControllerBase
 
             logger.LogInformation("SetAdmin: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-    }
-
-    [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
-    {
-        try
-        {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("GetAll: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            List<User> users = await userRepository.GetAllUsersAsync();
-
-            logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, users);
-
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-    }
-
-    [HttpGet("GetAllSessions")]
-    public IActionResult GetAllSessions([FromHeader] string globalAdminToken)
-    {
-        try
-        {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("GetAllSessions: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            Dictionary<string, string> sessions = tokenManager.GetAllSessions();
-
-            logger.LogInformation("GetAllSessions: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, sessions);
-
         }
         catch (Exception ex)
         {

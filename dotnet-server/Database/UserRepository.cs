@@ -46,6 +46,36 @@ public class UserRepository
         return false;
     }
 
+    public User? GetUser(string username)
+    {
+        if (dbContext.Users == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        return dbContext.Users.FirstOrDefault(user => user.Username == username);
+    }
+
+    public async Task<List<User>> GetAllUsersAsync()
+    {
+        if (dbContext.Users == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        return await dbContext.Users.ToListAsync();
+    }
+
+    public bool CheckIfUserExists(string username)
+    {
+        if (dbContext.Users == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        return dbContext.Users.Any(user => user.Username == username);
+    }
+
     public bool SetAdminStatus(string username, bool isAdmin)
     {
         if (dbContext.Users == null)
@@ -66,35 +96,5 @@ public class UserRepository
         }
 
         return false;
-    }
-
-    public bool CheckIfUserExists(string username)
-    {
-        if (dbContext.Users == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        return dbContext.Users.Any(user => user.Username == username);
-    }
-
-    public User? GetUser(string username)
-    {
-        if (dbContext.Users == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        return dbContext.Users.FirstOrDefault(user => user.Username == username);
-    }
-
-    public async Task<List<User>> GetAllUsersAsync()
-    {
-        if (dbContext.Users == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        return await dbContext.Users.ToListAsync();
     }
 }
