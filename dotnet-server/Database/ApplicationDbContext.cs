@@ -16,4 +16,14 @@ public class ApplicationDbContext : DbContext
        optionsBuilder.UseSqlite("Data Source=app.db");
        optionsBuilder.UseLazyLoadingProxies();
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Desk>().HasKey(d => d.Id);
+        modelBuilder.Entity<Location>().HasKey(l => l.LocationName);
+
+        modelBuilder.Entity<Location>()
+            .HasMany(l => l.Desks)
+            .WithOne(d => d.Location);
+    }
 }

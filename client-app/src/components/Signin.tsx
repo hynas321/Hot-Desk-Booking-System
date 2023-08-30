@@ -48,33 +48,41 @@ export default function Signin() {
   }
 
   return (
-    <div className="col-6 rounded p-3 bg-light mx-auto mt-3 ">
-      <div className="form-inline mt-3">
-        <h3 className="text-success"><b>Sign-In</b></h3>
-        <div className="form-group mt-2">
-          <label>Username</label>
-          <TextForm
-            placeholderValue={"Min 5 characters"}
-            onChange={(value) => setUsername(value)}
-          />
+    <>
+      <div className="col-6 rounded p-3 bg-light mx-auto mt-3 ">
+        <div className="form-inline mt-3">
+          <h3 className="text-success"><b>Sign-In</b></h3>
+          <div className="form-group mt-2">
+            <label>Username</label>
+            <TextForm
+              placeholderValue={"Min 5 characters"}
+              onChange={(value) => setUsername(value)}
+            />
+          </div>
+          <div className="form-group mt-2">
+            <label>Password</label>
+            <TextForm
+              placeholderValue={"Min 5 characters"}
+              onChange={(value) => setPassword(value)}
+            />
+          </div>
+          <div className="form-group mt-2">
+            <Button 
+              text="Sign in"
+              active={isButtonActive}
+              spacing={0}
+              type="success"
+              onClick={handleButtonClick}
+            />
+          </div>
         </div>
-        <div className="form-group mt-2">
-          <label>Password</label>
-          <TextForm
-            placeholderValue={"Min 5 characters"}
-            onChange={(value) => setPassword(value)}
-          />
-        </div>
-        <div className="form-group mt-2">
-          <Button 
-            text="Sign in"
-            active={isButtonActive}
-            spacing={0}
-            type="success"
-            onClick={handleButtonClick}
-          />
+        <div className="card mt-4">
+          <div className="card-body">
+            {"If you do not have your credentials, please ask the administrator"}
+            <div className="text-secondary">{"Available in the README.md file :)"}</div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

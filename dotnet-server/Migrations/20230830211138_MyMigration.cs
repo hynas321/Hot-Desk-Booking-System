@@ -39,6 +39,8 @@ namespace dotnet_server.Migrations
                 name: "Desks",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
                     DeskName = table.Column<string>(type: "TEXT", nullable: false),
                     Username = table.Column<string>(type: "TEXT", nullable: true),
                     BookingStartTime = table.Column<DateTime>(type: "TEXT", nullable: true),
@@ -47,7 +49,7 @@ namespace dotnet_server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Desks", x => x.DeskName);
+                    table.PrimaryKey("PK_Desks", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Desks_Locations_LocationName",
                         column: x => x.LocationName,

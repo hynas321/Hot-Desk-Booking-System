@@ -39,20 +39,22 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
+            if (token != configuration[Config.GlobalAdminToken]) {
+                string? username = tokenManager.GetUsername(token);
 
-            if (username == null)
-            {
-                logger.LogError("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                if (username == null)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            User? user = userRepository.GetUser(username);
+                User? user = userRepository.GetUser(username);
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool userExists = userRepository.CheckIfUserExists(userCredentials.Username);

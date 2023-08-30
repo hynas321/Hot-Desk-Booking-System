@@ -14,17 +14,26 @@ namespace dotnet_server.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.10");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "7.0.10")
+                .HasAnnotation("Proxies:ChangeTracking", false)
+                .HasAnnotation("Proxies:CheckEquality", false)
+                .HasAnnotation("Proxies:LazyLoading", true);
 
             modelBuilder.Entity("Desk", b =>
                 {
-                    b.Property<string>("DeskName")
-                        .HasColumnType("TEXT");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("BookingEndTime")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("BookingStartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DeskName")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LocationName")
@@ -33,7 +42,7 @@ namespace dotnet_server.Migrations
                     b.Property<string>("Username")
                         .HasColumnType("TEXT");
 
-                    b.HasKey("DeskName");
+                    b.HasKey("Id");
 
                     b.HasIndex("LocationName");
 
@@ -69,9 +78,11 @@ namespace dotnet_server.Migrations
 
             modelBuilder.Entity("Desk", b =>
                 {
-                    b.HasOne("Location", null)
+                    b.HasOne("Location", "Location")
                         .WithMany("Desks")
                         .HasForeignKey("LocationName");
+
+                    b.Navigation("Location");
                 });
 
             modelBuilder.Entity("Location", b =>

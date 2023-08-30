@@ -15,7 +15,7 @@ import { AlertManager } from '../managers/AlertManager';
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
+  const [isAddLocationPopupVisible, setIsLocationPopupVisible] = useState<boolean>(false);
   const [isLocationListVisible, setIsLocationListVisible] = useState<boolean>(false);
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
   const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function LocationsView() {
   }, []);
 
   const handleAddButtonClick = () => {
-    setIsPopupVisible(true);
+    setIsLocationPopupVisible(true);
   }
 
   const handleChooseLocationButtonClick = (locationName: string) => {
@@ -77,7 +77,7 @@ export default function LocationsView() {
   const handlePopupSubmit = async (locationName: string) => {
     try {
       const addLocationStatusCode = await apiRequestHandler.addLocation(token, locationName);
-      setIsPopupVisible(false);
+      setIsLocationPopupVisible(false);
 
       if (addLocationStatusCode != 201) {
         alertManager.displayAlert(`Could not add the location: ${locationName}`, "danger");
@@ -103,22 +103,31 @@ export default function LocationsView() {
       <Popup 
         title={"Name a new location"}
         inputFormPlaceholderText={"Insert the name here"}
-        visible={isPopupVisible}
+        visible={isAddLocationPopupVisible}
         onSubmit={handlePopupSubmit}
-        onClose={() => setIsPopupVisible(false)}
+        onClose={() => setIsLocationPopupVisible(false)}
       />
       {
         isLocationListVisible ?
         <>
         {
           user.isAdmin &&
+          <>
             <Button
-            text={"Add location"}
-            active={true}
-            spacing={0}
-            type={"success"}
-            onClick={handleAddButtonClick}
-          />
+              text={"Add location"}
+              active={true}
+              spacing={0}
+              type={"success"}
+              onClick={handleAddButtonClick}
+            />
+            <Button
+              text={"Add user"}
+              active={true}
+              spacing={1}
+              type={"warning"}
+              onClick={handleAddButtonClick}
+            />
+          </>
         }
           <LocationList 
             locations={locations}

@@ -58,7 +58,7 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
 
             if (deskExists)
             {
@@ -111,7 +111,7 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
 
             if (!deskExists)
             {
@@ -180,7 +180,13 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(bookingInfo.DeskName);
+            DeskInformation deskInfo = new DeskInformation()
+            {
+                DeskName = bookingInfo.DeskName,
+                LocationName = bookingInfo.LocationName
+            };
+
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
 
             if (!deskExists)
             {

@@ -60,14 +60,21 @@ public class DeskRepository
         return false;
     }
 
-    public bool CheckIfDeskExists(string deskName)
+    public bool CheckIfDeskExists(DeskInformation deskInfo)
     {
         if (dbContext.Desks == null)
         {
             throw new NullReferenceException();
         }
 
-        return dbContext.Desks.Any(d => d.DeskName == deskName);
+        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName ==deskInfo.LocationName);
+
+        if (location != null)
+        {
+            return location.Desks.Any(d => d.DeskName == deskInfo.DeskName);
+        }
+
+        return false;
     }
 
     public ClientsideDesk? BookDesk(string username, BookingInformation bookingInformation)

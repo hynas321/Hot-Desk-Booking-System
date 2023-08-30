@@ -4,7 +4,7 @@ import { updatedAlert, updatedVisible } from "../components/redux/slices/alert-s
 export class AlertManager {
   private dispatch = useDispatch();
 
-  displayAlert = (message: string, type: string) => {
+  displayAlert = (message: string, type: string, ms?: number) => {
     this.dispatch(updatedAlert({
       text: message,
       visible: true,
@@ -13,6 +13,6 @@ export class AlertManager {
     
     setTimeout(() => {
       this.dispatch(updatedVisible(false));
-    }, 3000);
+    }, ms ?? 3000);
   }
 }

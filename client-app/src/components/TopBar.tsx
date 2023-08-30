@@ -24,21 +24,45 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
 
   return (
     <div>
-      <h3 className="text-center text-primary mt-3 mx-auto"><b>Hot Desk Booking System</b></h3>
-      <Alert />
-      {
-        isUserInfoVisible &&
-        <div className="d-flex justify-content-end align-items-center">
-        <h6 className="mx-3">{`${user.isAdmin && "Admin: "}${user.username}`}</h6>
-        <Button
-          text={"Sign out"}
-          active={true}
-          spacing={0}
-          type="secondary"
-          onClick={handleButtonClick}
-        />
+      <div className="row mb-3">
+        <div className="col-12 col-md-3"></div>
+        <div className="col-12 col-md-6">
+          <h3 className="text-center mt-3">
+            <b className="text-primary">Hot Desk Booking System</b>
+          </h3>
+          <Alert />
+        </div>
+        <div className="col-12 col-md-3 mt-3 justify-content-md-end">
+          <div className="d-flex justify-content-center justify-content-md-end">
+            {
+              isUserInfoVisible &&
+              <Button
+                text={"Sign out"}
+                active={true}
+                spacing={0}
+                type="danger"
+                onClick={handleButtonClick}
+              />
+            }
+          </div>
+        </div>
       </div>
-      }
+      {
+        isUserInfoVisible && (
+          <div className="mb-3">
+            <h5 className="text-secondary">{`${user.isAdmin ? "Administrator" : "Employee"}:`} <b className="text-secondary">{user.username}</b></h5>
+            <h6 className="text-danger">{"Your current reservation: none"}</h6>
+          </div>
+            ) 
+          }
     </div>
   )
 }
+
+/*
+    <div>
+      <h3 className="text-center text-primary mt-3 mx-auto"><b>Hot Desk Booking System</b></h3>
+      
+
+    </div>
+*/
