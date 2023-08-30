@@ -29,7 +29,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromBody] UserCredentials userCredentials)
+    public IActionResult Add([FromHeader] string token, [FromBody] UserCredentials userCredentials)
     {
         try
         {
@@ -39,18 +39,37 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogError("Add: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null || user.IsAdmin == false)
+            {
+                logger.LogError("Add: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
             bool userExists = userRepository.CheckIfUserExists(userCredentials.Username);
+            BooleanOutput output = new BooleanOutput();
 
             if (userExists)
             {
-                logger.LogInformation("Add: Status 200, OK");
-                return StatusCode(StatusCodes.Status200OK);
+                output.Value = false;
+
+                logger.LogInformation("Add: Status 409, Conflict");
+                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
             }
 
             userRepository.AddUser(userCredentials);
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created);
+            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -60,7 +79,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string globalAdminToken, [FromBody] UserUsername username)
+    public IActionResult Remove([FromHeader] string token, [FromBody] UserUsername userToRemove)
     {
         try
         {
@@ -70,22 +89,45 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
             {
                 logger.LogError("Remove: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool userRemoved = userRepository.RemoveUser(username.Username);
+            User? user = userRepository.GetUser(username);
 
-            if (!userRemoved)
+            if (user == null || user.IsAdmin == false)
             {
-                logger.LogInformation("Remove: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                logger.LogError("Remove: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
             }
-            
+
+            bool userExists = userRepository.CheckIfUserExists(userToRemove.Username);
+            BooleanOutput output = new BooleanOutput();
+
+            if (!userExists)
+            {
+                output.Value = false;
+
+                logger.LogInformation("Remove: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+            }
+
+            bool isUserRemoved = userRepository.RemoveUser(userToRemove.Username);
+
+            output.Value = isUserRemoved;
+
+            if (!isUserRemoved)
+            {
+                logger.LogInformation("Remove: 500, Internal server error");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+            }
+
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -169,9 +211,13 @@ public class UserController : ControllerBase
 
             SessionTokenManager tokenManager = new SessionTokenManager();
             string token = tokenManager.CreateToken(userCredentials.Username);
+            TokenOutput output = new TokenOutput
+            {
+                Token = token
+            };
 
             logger.LogInformation("LogIn: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(new TokenOutput() { Token = token }));
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {

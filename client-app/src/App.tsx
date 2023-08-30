@@ -28,7 +28,7 @@ function App() {
 ]);
 
 return (
-    <div className="container col-8">
+    <div className="container col-6">
       <Provider store={store}>
         <RouterProvider router={router}/>
       </Provider>

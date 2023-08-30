@@ -32,7 +32,7 @@ public class DeskController : ControllerBase
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] DeskInformation deskInformation)
+    public IActionResult Add([FromHeader] string token, [FromBody] DeskInformation deskInfo)
     {
         try
         {
@@ -58,16 +58,29 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskAdded = deskRepository.AddDesk(deskInformation);
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
+            BooleanOutput output = new BooleanOutput();
+
+            if (deskExists)
+            {
+                output.Value = false;
+
+                logger.LogInformation("Add: Status 409, Conflict");
+                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
+            }
+
+            bool deskAdded = deskRepository.AddDesk(deskInfo);
+
+            output.Value = deskAdded;
 
             if (!deskAdded)
             {
-                logger.LogInformation("Add: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                logger.LogInformation("Add: Status 500, Internal server error");
+                return StatusCode(StatusCodes.Status500InternalServerError, JsonHelper.Serialize(output));
             }
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created);
+            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -77,7 +90,7 @@ public class DeskController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] DeskInformation deskInformation)
+    public IActionResult Remove([FromHeader] string token, [FromBody] DeskInformation deskInfo)
     {
         try
         {
@@ -103,16 +116,29 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskRemoved = deskRepository.RemoveDesk(deskInformation);
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
+            BooleanOutput output = new BooleanOutput();
 
-            if (!deskRemoved)
+            if (!deskExists)
             {
-                logger.LogInformation("Remove: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                output.Value = false;
+
+                logger.LogInformation("Remove: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+            }
+
+            bool isDeskRemoved = deskRepository.RemoveDesk(deskInfo);
+
+            output.Value = isDeskRemoved;
+
+            if (!isDeskRemoved)
+            {
+                logger.LogInformation("Remove: 500, Internal server error");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
             }
 
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -165,9 +191,15 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            deskRepository.BookDesk(username, bookingInformation);
+            ClientsideDesk? clientsideDesk = deskRepository.BookDesk(username, bookingInformation);
 
-            return StatusCode(StatusCodes.Status200OK);
+            if (clientsideDesk == null)
+            {
+                logger.LogInformation("BookDesk: Status 404, Not found");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesk));
         }
         catch (Exception ex)
         {
@@ -196,9 +228,13 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            deskRepository.UnbookDesk(deskInfo);
-
-            return StatusCode(StatusCodes.Status200OK);
+            bool isDeskUnbooked = deskRepository.UnbookDesk(deskInfo);
+            BooleanOutput booleanOutput = new BooleanOutput()
+            {
+                Value = isDeskUnbooked
+            };
+        
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(booleanOutput));
         }
         catch (Exception ex)
         {

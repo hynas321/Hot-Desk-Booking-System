@@ -12,15 +12,15 @@ export default function LocationList({locations, onChooseClick, onRemoveClick}: 
   const isUserAdmin = useAppSelector((state) => state.user.isAdmin);
   
   return (
-    <>
-      <ul className="list-group mt-3">
+    <ul className="list-group mt-3">
       {
-        locations.map((location: Location, index) =>
+        locations.length !== 0 ? (
+          locations.map((location: Location, index) =>
           <li
             key={index}
             className="list-group-item">
               <div><b>{`${location.locationName}`}</b></div>
-              <div className="mb-2">{`Number of desks: ${location.deskCount}`}</div>
+              <div className="mb-2">{`Total desks: ${location.totalDeskCount}, available: ${location.availableDeskCount}`}</div>
               <Button
                 text="Enter this location"
                 active={true}
@@ -32,16 +32,16 @@ export default function LocationList({locations, onChooseClick, onRemoveClick}: 
                 isUserAdmin &&
                   <Button
                   text="Remove"
-                  active={location.deskCount === 0}
+                  active={location.totalDeskCount === 0}
                   spacing={3}
                   type="danger"
                   onClick={() => onRemoveClick(location.locationName)}
                 />
               }
           </li>
-        )
+        ))
+        : <h5 className="text-danger">{"Nothing to display :("}</h5>
       }
-      </ul>
-    </>
+    </ul>
   )
 }

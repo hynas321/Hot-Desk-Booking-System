@@ -60,7 +60,17 @@ public class DeskRepository
         return false;
     }
 
-    public bool BookDesk(string username, BookingInformation bookingInformation)
+    public bool CheckIfDeskExists(string deskName)
+    {
+        if (dbContext.Desks == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        return dbContext.Desks.Any(d => d.DeskName == deskName);
+    }
+
+    public ClientsideDesk? BookDesk(string username, BookingInformation bookingInformation)
     {
         if (dbContext.Desks == null)
         {
@@ -84,11 +94,22 @@ public class DeskRepository
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
 
-                return true;
+                string bookingStartTimeString = now.ToString("dd-MM-yyyy HH:mm:ss");
+                string bookingEndTimeString = now.ToString("dd-MM-yyyy HH:mm:ss");
+
+                ClientsideDesk clientsideDesk = new ClientsideDesk()
+                {
+                    DeskName = desk.DeskName,
+                    Username = desk.Username,
+                    BookingStartTime = bookingStartTimeString,
+                    BookingEndTime = bookingEndTimeString
+                };
+
+                return clientsideDesk;
             }
         }
 
-        return false;
+        return null;
     }
 
     public bool UnbookDesk(DeskInformation deskInformation)

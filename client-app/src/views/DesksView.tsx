@@ -9,6 +9,7 @@ import ApiRequestHandler from '../http/ApiRequestHandler';
 import TopBar from '../components/TopBar';
 import useLocalStorageState from 'use-local-storage-state';
 import { useAppSelector } from '../components/redux/hooks';
+import { BooleanOutput } from '../http/ApiInterfaces';
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
@@ -30,12 +31,12 @@ export default function DesksView() {
 
     const fetchDesksAsync = async () => {
       const fetchedDesks = await apiRequestHandler.getDesks(locationName);
-      console.log(fetchedDesks);
+
       setDesks(fetchedDesks);
 
       setTimeout(() => {
         setIsDeskListVisible(true);
-      }, 1000);
+      }, 500);
     }
     
     fetchDesksAsync();
@@ -46,30 +47,27 @@ export default function DesksView() {
   }
 
   const handleBookButtonClick = async (deskName: string) => {
-    //TODO: get date from the server to update desk
-    await apiRequestHandler.bookDesk(token, deskName, locationName, bookingDays);
-
-    const updatedDesk: Desk = {
-      deskName: deskName,
-      username: "YOUR_USERNAME",
-      bookingStartDate: new Date(),
-      bookingEndTime: new Date()
-    };
-
+    const bookedDesk: Desk = await apiRequestHandler.bookDesk(token, deskName, locationName, bookingDays);
     const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
 
     const updatedDesks = [...desks];
-    updatedDesks[deskIndex] = updatedDesk;
+    updatedDesks[deskIndex] = bookedDesk;
 
     setDesks(updatedDesks);
   }
 
   const handleRemoveButtonClick = async (deskName: string) => {
     try {
-      //TODO: boolean
-      await apiRequestHandler.removeDesk(token, deskName, locationName);
+      const isDeskRemovedObj: BooleanOutput = await apiRequestHandler.removeDesk(token, deskName, locationName);
+
+      if (!isDeskRemovedObj.value) {
+        console.error("Error removing desk");
+        return;
+      }
+
       const updatedDesks = desks.filter(desk => desk.deskName !== deskName);
       setDesks(updatedDesks);
+
     } catch (error) {
       console.error("Error removing desk:", error);
     }
@@ -77,9 +75,13 @@ export default function DesksView() {
 
   const handlePopupSubmit = async (deskName: string) => {
     try {
-      //TODO: boolean
-      await apiRequestHandler.addDesk(token, deskName, locationName);
+      const isDeskAddedObj: BooleanOutput = await apiRequestHandler.addDesk(token, deskName, locationName);
       setIsPopupVisible(false);
+
+      if (!isDeskAddedObj.value) {
+        console.error("Error adding desk");
+        return;
+      }
 
       const newDesk: Desk = {
         deskName: deskName,

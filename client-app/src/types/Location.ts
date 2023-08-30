@@ -1,4 +1,5 @@
 export type Location = {
   locationName: string,
-  deskCount: number
+  totalDeskCount: number,
+  availableDeskCount: number
 }

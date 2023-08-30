@@ -40,7 +40,7 @@ export default function LocationsView() {
 
       setTimeout(() => {
         setIsLocationListVisible(true);
-      }, 1000);
+      }, 500);
     }
     
     checkIsAdminAsync();
@@ -75,7 +75,8 @@ export default function LocationsView() {
 
       const newLocation: Location = {
         locationName: locationName,
-        deskCount: 0
+        totalDeskCount: 0,
+        availableDeskCount: 0
       };
 
       setLocations([...locations, newLocation]);

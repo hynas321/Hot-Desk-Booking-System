@@ -3,6 +3,7 @@ import { Desk } from '../types/Desk'
 import Button from './Button'
 import Range from './Range'
 import { useAppSelector } from './redux/hooks';
+import { DateManager } from '../managers/DateManager';
 
 interface DeskListProps {
   desks: Desk[],
@@ -14,7 +15,7 @@ interface DeskListProps {
 export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChange}: DeskListProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const isUserAdmin = useAppSelector((state) => state.user.isAdmin);
-  
+
   return (
     <>
       <ul className="list-group mt-3">

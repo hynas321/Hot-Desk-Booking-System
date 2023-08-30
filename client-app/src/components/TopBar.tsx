@@ -12,7 +12,7 @@ interface TopBarProps {
 export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
   const navigate = useNavigate();
-  const username = useAppSelector((state) => state.user.username)
+  const user = useAppSelector((state) => state.user)
 
   const apiRequestHandler = new ApiRequestHandler();
   
@@ -27,7 +27,7 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
       {
         isUserInfoVisible &&
         <div className="d-flex justify-content-end align-items-center">
-        <h6 className="mx-3">{`${username}`}</h6>
+        <h6 className="mx-3">{`${user.isAdmin && "Admin: "}${user.username}`}</h6>
         <Button
           text={"Sign out"}
           active={true}

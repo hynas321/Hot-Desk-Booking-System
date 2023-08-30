@@ -1,7 +1,7 @@
 import config from './../config.json';
 import ApiEndpoints from './ApiEndpoints';
 import ApiHeaders from './ApiHeaders';
-import { BookingInformation, DeskInformation, LocationName, UserCredentials } from './ApiInterfaces';
+import { BookingInformation, BooleanOutput, DeskInformation, LocationName, UserCredentials } from './ApiInterfaces';
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
@@ -190,7 +190,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.json() as BooleanOutput;
     }
     catch (error) {
       return error;
@@ -217,7 +217,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.json() as BooleanOutput;
     }
     catch (error) {
       return error;
@@ -245,7 +245,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.json() as Desk;
     }
     catch (error) {
       return error;

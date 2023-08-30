@@ -58,18 +58,22 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Location? location = locationRepository.GetLocation(locationName.Name);
+            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
+            BooleanOutput output = new BooleanOutput();
 
-            if (location != null)
+            if (locationExists)
             {
-                logger.LogInformation("Remove: Status 200, OK");
-                return StatusCode(StatusCodes.Status200OK);
+                output.Value = false;
+
+                logger.LogInformation("Add: Status 409, Conflict");
+                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
             }
 
             locationRepository.AddLocation(locationName.Name);
+            output.Value = true;
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created);
+            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -105,18 +109,29 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Location? location = locationRepository.GetLocation(locationName.Name);
+            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
+            BooleanOutput output = new BooleanOutput();
 
-            if (location == null)
+            if (!locationExists)
             {
-                logger.LogInformation("Remove: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                output.Value = false;
+
+                logger.LogInformation("Remove: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
             }
 
-            locationRepository.RemoveLocation(locationName.Name);
+            bool isLocationRemoved = locationRepository.RemoveLocation(locationName.Name);
+
+            output.Value = isLocationRemoved;
+
+            if (!isLocationRemoved)
+            {
+                logger.LogInformation("Remove: Status 500, Internal server error");
+                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+            }
 
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -162,7 +177,8 @@ public class LocationController : ControllerBase
                     new ClientsideLocation()
                     {
                         LocationName = location.LocationName,
-                        DeskCount = location.Desks.Count
+                        TotalDeskCount = location.Desks.Count,
+                        AvailableDeskCount = location.Desks.Where(x => x.Username == null).Count()
                     }
                 );
             }
@@ -192,7 +208,7 @@ public class LocationController : ControllerBase
             List<Location> locations = await locationRepository.GetAllLocationsAsync();
 
             logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, locations);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(locations));
 
         }
         catch (Exception ex)
