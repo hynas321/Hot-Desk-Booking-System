@@ -1,7 +1,7 @@
 import config from './../config.json';
 import ApiEndpoints from './ApiEndpoints';
 import ApiHeaders from './ApiHeaders';
-import { BookingInformation, BooleanOutput, DeskInformation, LocationName, UserCredentials } from './ApiInterfaces';
+import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials } from './ApiInterfaces';
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
@@ -28,7 +28,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json() as string;
+      return await response.json() as TokenOutput;
     }
     catch (error) {
       return error;
@@ -49,7 +49,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       }
 
-      return await response.json();
+      return await response.status;
     }
     catch (error) {
       return error;
@@ -96,7 +96,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.status;
     }
     catch (error) {
       return error;
@@ -117,12 +117,12 @@ class HttpRequestHandler {
           [ApiHeaders.token]: token
         }
       });
-
+      
       if (!response.ok) {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.status;
     }
     catch (error) {
       return error;
@@ -190,7 +190,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json() as BooleanOutput;
+      return await response.status;
     }
     catch (error) {
       return error;
@@ -217,7 +217,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json() as BooleanOutput;
+      return await response.status;
     }
     catch (error) {
       return error;

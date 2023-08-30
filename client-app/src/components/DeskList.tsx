@@ -45,7 +45,7 @@ export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChan
                   isUserAdmin &&
                     <Button
                     text="Remove"
-                    active={desk.username === null}
+                    active={true}
                     spacing={3}
                     type="danger"
                     onClick={() => onRemoveClick(desk.deskName)}

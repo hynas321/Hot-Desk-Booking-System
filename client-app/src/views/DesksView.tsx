@@ -9,7 +9,7 @@ import ApiRequestHandler from '../http/ApiRequestHandler';
 import TopBar from '../components/TopBar';
 import useLocalStorageState from 'use-local-storage-state';
 import { useAppSelector } from '../components/redux/hooks';
-import { BooleanOutput } from '../http/ApiInterfaces';
+import { AlertManager } from '../managers/AlertManager';
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
@@ -23,6 +23,7 @@ export default function DesksView() {
   const isUserAdmin = useAppSelector((state) => state.user.isAdmin);
 
   const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
+  const alertManager: AlertManager = new AlertManager();
 
   useEffect(() => {
     if (locationName === undefined) {
@@ -48,6 +49,12 @@ export default function DesksView() {
 
   const handleBookButtonClick = async (deskName: string) => {
     const bookedDesk: Desk = await apiRequestHandler.bookDesk(token, deskName, locationName, bookingDays);
+
+    if (bookedDesk.deskName === undefined || !bookedDesk) {
+      alertManager.displayAlert(`Could not book the desk: ${deskName}`, "danger");
+      return;
+    }
+
     const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
 
     const updatedDesks = [...desks];
@@ -58,10 +65,10 @@ export default function DesksView() {
 
   const handleRemoveButtonClick = async (deskName: string) => {
     try {
-      const isDeskRemovedObj: BooleanOutput = await apiRequestHandler.removeDesk(token, deskName, locationName);
+      const removeDeskStatusCode = await apiRequestHandler.removeDesk(token, deskName, locationName);
 
-      if (!isDeskRemovedObj.value) {
-        console.error("Error removing desk");
+      if (removeDeskStatusCode != 200) {
+        alertManager.displayAlert(`Could not remove the desk: ${deskName}`, "danger");
         return;
       }
 
@@ -69,17 +76,17 @@ export default function DesksView() {
       setDesks(updatedDesks);
 
     } catch (error) {
-      console.error("Error removing desk:", error);
+      alertManager.displayAlert(`Unexpected error`, "danger");
     }
   }
 
   const handlePopupSubmit = async (deskName: string) => {
     try {
-      const isDeskAddedObj: BooleanOutput = await apiRequestHandler.addDesk(token, deskName, locationName);
+      const addDeskStatusCode = await apiRequestHandler.addDesk(token, deskName, locationName);
       setIsPopupVisible(false);
 
-      if (!isDeskAddedObj.value) {
-        console.error("Error adding desk");
+      if (addDeskStatusCode != 201) {
+        alertManager.displayAlert(`Could not add the desk: ${deskName}`, "danger");
         return;
       }
 
@@ -92,7 +99,7 @@ export default function DesksView() {
 
       setDesks([...desks, newDesk]);
     } catch (error) {
-      console.error("Error adding desk:", error);
+      alertManager.displayAlert(`Unexpected error`, "danger");
     }
   }
 

@@ -48,7 +48,7 @@ public class DeskRepository
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
 
-            if (desk != null)
+            if (desk != null && desk.Username == null)
             {
                 dbContext?.Desks.Remove(desk);
                 dbContext?.SaveChanges();

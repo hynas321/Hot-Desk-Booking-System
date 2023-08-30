@@ -11,6 +11,7 @@ import TopBar from '../components/TopBar';
 import { useAppSelector } from '../components/redux/hooks';
 import { useDispatch } from 'react-redux';
 import { updatedIsAdmin } from '../components/redux/slices/user-slice';
+import { AlertManager } from '../managers/AlertManager';
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -22,6 +23,7 @@ export default function LocationsView() {
   const user = useAppSelector((state) => state.user);
 
   const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
+  const alertManager: AlertManager = new AlertManager();
 
   useEffect(() => {
     //if (!token || token === "") {
@@ -57,21 +59,30 @@ export default function LocationsView() {
 
   const handleRemoveButtonClick = async (locationName: string) => {
     try {
-      //TODO: boolean that location was removed
-      await apiRequestHandler.removeLocation(token, locationName);
+      const removeLocationStatusCode = await apiRequestHandler.removeLocation(token, locationName);
+
+      if (removeLocationStatusCode != 200) {
+        alertManager.displayAlert(`Could not remove the location ${locationName}`, "danger");
+        return;
+      }
+
       const updatedLocations = locations.filter(location => location.locationName !== locationName);
       setLocations(updatedLocations);
   
     } catch (error) {
-      console.error("Error removing location:", error);
+      alertManager.displayAlert("Unexpected error", "danger");
     }
   }
 
   const handlePopupSubmit = async (locationName: string) => {
     try {
-      //TODO: boolean
-      await apiRequestHandler.addLocation(token, locationName);
+      const addLocationStatusCode = await apiRequestHandler.addLocation(token, locationName);
       setIsPopupVisible(false);
+
+      if (addLocationStatusCode != 201) {
+        alertManager.displayAlert(`Could not add the location: ${locationName}`, "danger");
+        return;
+      }
 
       const newLocation: Location = {
         locationName: locationName,
@@ -81,7 +92,7 @@ export default function LocationsView() {
 
       setLocations([...locations, newLocation]);
     } catch (error) {
-      console.error("Error adding location:", error);
+      alertManager.displayAlert(`Unexpected error`, "danger");
     }
   }
 

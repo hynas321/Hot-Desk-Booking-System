@@ -4,6 +4,7 @@ import Button from "./Button";
 import { useNavigate } from "react-router-dom";
 import config from './../config.json';
 import { useAppSelector } from "./redux/hooks";
+import Alert from "./Alert";
 
 interface TopBarProps {
   isUserInfoVisible: boolean;
@@ -24,6 +25,7 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
   return (
     <div>
       <h3 className="text-center text-primary mt-3 mx-auto"><b>Hot Desk Booking System</b></h3>
+      <Alert />
       {
         isUserInfoVisible &&
         <div className="d-flex justify-content-end align-items-center">

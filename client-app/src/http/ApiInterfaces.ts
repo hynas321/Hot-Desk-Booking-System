@@ -24,11 +24,4 @@ export interface UserUsername {
 
 export interface TokenOutput {
   token: string;
-  statusCode: string;
 }
-
-export interface BooleanOutput {
-  value: boolean;
-  statusCode: string;
-}
-  

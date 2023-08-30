@@ -56,20 +56,17 @@ public class UserController : ControllerBase
             }
 
             bool userExists = userRepository.CheckIfUserExists(userCredentials.Username);
-            BooleanOutput output = new BooleanOutput();
 
             if (userExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Add: Status 409, Conflict");
-                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status409Conflict);
             }
 
             userRepository.AddUser(userCredentials);
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
@@ -106,28 +103,23 @@ public class UserController : ControllerBase
             }
 
             bool userExists = userRepository.CheckIfUserExists(userToRemove.Username);
-            BooleanOutput output = new BooleanOutput();
 
             if (!userExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Remove: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
 
             bool isUserRemoved = userRepository.RemoveUser(userToRemove.Username);
 
-            output.Value = isUserRemoved;
-
             if (!isUserRemoved)
             {
                 logger.LogInformation("Remove: 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
 
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {

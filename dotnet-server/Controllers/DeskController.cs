@@ -59,28 +59,23 @@ public class DeskController : ControllerBase
             }
 
             bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
-            BooleanOutput output = new BooleanOutput();
 
             if (deskExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Add: Status 409, Conflict");
-                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status409Conflict);
             }
 
             bool deskAdded = deskRepository.AddDesk(deskInfo);
 
-            output.Value = deskAdded;
-
             if (!deskAdded)
             {
                 logger.LogInformation("Add: Status 500, Internal server error");
-                return StatusCode(StatusCodes.Status500InternalServerError, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
@@ -117,28 +112,23 @@ public class DeskController : ControllerBase
             }
 
             bool deskExists = deskRepository.CheckIfDeskExists(deskInfo.DeskName);
-            BooleanOutput output = new BooleanOutput();
 
             if (!deskExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Remove: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
-
+            
             bool isDeskRemoved = deskRepository.RemoveDesk(deskInfo);
-
-            output.Value = isDeskRemoved;
 
             if (!isDeskRemoved)
             {
                 logger.LogInformation("Remove: 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
 
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {
@@ -229,12 +219,8 @@ public class DeskController : ControllerBase
             }
 
             bool isDeskUnbooked = deskRepository.UnbookDesk(deskInfo);
-            BooleanOutput booleanOutput = new BooleanOutput()
-            {
-                Value = isDeskUnbooked
-            };
-        
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(booleanOutput));
+
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {

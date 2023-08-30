@@ -59,21 +59,17 @@ public class LocationController : ControllerBase
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
-            BooleanOutput output = new BooleanOutput();
 
             if (locationExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Add: Status 409, Conflict");
-                return StatusCode(StatusCodes.Status409Conflict, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status409Conflict);
             }
 
             locationRepository.AddLocation(locationName.Name);
-            output.Value = true;
 
             logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
@@ -110,28 +106,23 @@ public class LocationController : ControllerBase
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
-            BooleanOutput output = new BooleanOutput();
 
             if (!locationExists)
             {
-                output.Value = false;
-
                 logger.LogInformation("Remove: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
 
             bool isLocationRemoved = locationRepository.RemoveLocation(locationName.Name);
 
-            output.Value = isLocationRemoved;
-
             if (!isLocationRemoved)
             {
                 logger.LogInformation("Remove: Status 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound, JsonHelper.Serialize(output));
+                return StatusCode(StatusCodes.Status404NotFound);
             }
 
             logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {

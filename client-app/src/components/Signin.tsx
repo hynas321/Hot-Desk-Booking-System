@@ -7,6 +7,8 @@ import config from './../config.json';
 import useLocalStorageState from "use-local-storage-state";
 import { useDispatch } from "react-redux";
 import { updatedUsername } from "./redux/slices/user-slice";
+import { AlertManager } from "../managers/AlertManager";
+import { TokenOutput } from "../http/ApiInterfaces";
 
 export default function Signin() {
   const [username, setUsername] = useState<string>("");
@@ -17,6 +19,7 @@ export default function Signin() {
   const dispatch = useDispatch();
 
   const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
+  const alertManager: AlertManager = new AlertManager();
 
   useEffect(() => {
     if (username.length >= 5 && password.length >= 5) {
@@ -26,22 +29,23 @@ export default function Signin() {
       setIsButtonActive(false);
     }
   }, [username, password]);
-;
-const handleButtonClick = () => {
-  const logInAsync = async () => {
-    const tokenObj = await apiRequestHandler.logIn(username, password);
 
-    if (typeof(tokenObj.token) !== "string") {
-      return;
+  const handleButtonClick = () => {
+    const logInAsync = async () => {
+      const tokenObj: TokenOutput = await apiRequestHandler.logIn(username, password);
+
+      if (typeof(tokenObj.token) !== "string") {
+        alertManager.displayAlert("Could not log in, check your username or password", "danger");
+        return;
+      }
+
+      setToken(tokenObj.token);
+      dispatch(updatedUsername(username));
+      navigate(`${config.locationsViewClientEndpoint}`);
     }
 
-    setToken(tokenObj.token);
-    dispatch(updatedUsername(username));
-    navigate(`${config.locationsViewClientEndpoint}`);
+    logInAsync();
   }
-
-  logInAsync();
-}
 
   return (
     <div className="col-6 rounded p-3 bg-light mx-auto mt-3 ">
