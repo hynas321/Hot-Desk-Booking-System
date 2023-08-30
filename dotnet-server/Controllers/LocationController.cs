@@ -125,21 +125,50 @@ public class LocationController : ControllerBase
         }
     }
 
+    [HttpGet("GetDesks/{locationName}")]
+    public IActionResult GetDesks([FromRoute] string locationName)
+    {
+        try
+        {
+            Location? location = locationRepository.GetLocation(locationName);
+
+            if (location == null)
+            {
+                logger.LogInformation("GetDesks: Status 404, Not Found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            logger.LogInformation("GetDesks: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(location.Desks));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
     [HttpGet("GetAllNames")]
     public async Task<IActionResult> GetAllNames()
     {
         try
         {
             List<Location> locations = await locationRepository.GetAllLocationsAsync();
-            List<string> locationNames = new List<string>();
-
+            List<ClientsideLocation> clientsideLocations = new List<ClientsideLocation>();
+            
             foreach(var location in locations)
             {
-                locationNames.Add(location.LocationName);
+                clientsideLocations.Add(
+                    new ClientsideLocation()
+                    {
+                        LocationName = location.LocationName,
+                        DeskCount = location.Desks.Count
+                    }
+                );
             }
 
             logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, locationNames);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideLocations));
 
         }
         catch (Exception ex)

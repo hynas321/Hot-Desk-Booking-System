@@ -10,14 +10,14 @@ namespace dotnet_server.Controllers;
 [Route("api/[controller]")]
 public class DeskController : ControllerBase
 {
-    private readonly ILogger<LocationController> logger;
+    private readonly ILogger<DeskController> logger;
     private readonly IConfiguration configuration;
     private readonly UserRepository userRepository;
     private readonly DeskRepository deskRepository;
     private readonly SessionTokenManager tokenManager;
 
     public DeskController(
-        ILogger<LocationController> logger,
+        ILogger<DeskController> logger,
         IConfiguration configuration,
         UserRepository userRepository,
         DeskRepository deskRepository,
@@ -46,13 +46,13 @@ public class DeskController : ControllerBase
 
             if (username == null)
             {
-                logger.LogInformation("Add: Status 401, Unauthorized");
+                logger.LogError("Add: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
             User? user = userRepository.GetUser(username);
 
-            if (user == null || user.IsAdmin)
+            if (user == null || user.IsAdmin == false)
             {
                 logger.LogError("Add: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);

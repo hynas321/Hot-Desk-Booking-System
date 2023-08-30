@@ -4,6 +4,8 @@ import config from './config.json';
 import DesksView from './views/DesksView';
 import NotFoundView from './views/NotFoundView';
 import MainView from './views/MainView';
+import { Provider } from 'react-redux';
+import { store } from './components/redux/store';
 
 function App() {
   const router = createBrowserRouter([
@@ -26,16 +28,11 @@ function App() {
 ]);
 
 return (
-  <>
-    <div className="container">
-      <div className="row">
-        <h3 className="text-center mt-3">Hot Desk Booking System</h3>
-      </div>
-      <div className="container col-10">
+    <div className="container col-8">
+      <Provider store={store}>
         <RouterProvider router={router}/>
-      </div>
+      </Provider>
     </div>
-  </>
   )
 }
 

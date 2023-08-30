@@ -171,7 +171,7 @@ public class UserController : ControllerBase
             string token = tokenManager.CreateToken(userCredentials.Username);
 
             logger.LogInformation("LogIn: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, token);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(new TokenOutput() { Token = token }));
         }
         catch (Exception ex)
         {
@@ -203,8 +203,8 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("IsAdmin")]
-    public IActionResult IsAdmin(string username)
+    [HttpGet("IsAdmin/{username}")]
+    public IActionResult IsAdmin([FromRoute] string username)
     {
         try
         {
