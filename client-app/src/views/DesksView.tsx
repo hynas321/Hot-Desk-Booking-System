@@ -135,11 +135,10 @@ export default function DesksView() {
             onClick={handleAddButtonClick}
           />
         }
-
           <Button
             text= {"Return to locations"}
             active={true}
-            spacing={2}
+            spacing={1}
             type={"secondary"}
             onClick={handleGoBackButtonClick}
           />
@@ -152,7 +151,6 @@ export default function DesksView() {
         </>
         : <h5 className="mt-3 text-success">Loading data...</h5>
       }
-
     </div>
   );
 }

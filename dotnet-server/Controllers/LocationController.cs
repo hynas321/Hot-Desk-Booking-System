@@ -137,6 +137,7 @@ public class LocationController : ControllerBase
         try
         {
             Location? location = locationRepository.GetLocation(locationName);
+            List<ClientsideDesk> clientsideDesks = new List<ClientsideDesk>();
 
             if (location == null)
             {
@@ -144,8 +145,21 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
+            foreach (var desk in location.Desks)
+            {
+                clientsideDesks.Add(
+                    new ClientsideDesk()
+                    {
+                        DeskName = desk.DeskName,
+                        Username = desk.Username,
+                        BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null,
+                        BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null
+                    }
+                );
+            }
+
             logger.LogInformation("GetDesks: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(location.Desks));
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesks));
         }
         catch (Exception ex)
         {

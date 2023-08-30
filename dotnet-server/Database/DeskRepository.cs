@@ -85,17 +85,19 @@ public class DeskRepository
 
             if (desk != null && desk.Username == null)
             {
-                DateTime now = DateTime.UtcNow;
+                DateTime utcNow = DateTime.UtcNow;
+                TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
 
                 desk.Username = username;
-                desk.BookingStartTime = now;
-                desk.BookingEndTime = now.AddDays(bookingInformation.Days);
+                desk.BookingStartTime = localTime;
+                desk.BookingEndTime = localTime.AddDays(bookingInformation.Days);
 
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
 
-                string bookingStartTimeString = now.ToString("dd-MM-yyyy HH:mm:ss");
-                string bookingEndTimeString = now.ToString("dd-MM-yyyy HH:mm:ss");
+                string bookingStartTimeString = desk.BookingStartTime.Value.ToString("dd-MM-yyyy HH:mm:ss");
+                string bookingEndTimeString = desk.BookingEndTime.Value.ToString("dd-MM-yyyy HH:mm:ss");
 
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {

@@ -3,7 +3,6 @@ import { Desk } from '../types/Desk'
 import Button from './Button'
 import Range from './Range'
 import { useAppSelector } from './redux/hooks';
-import { DateManager } from '../managers/DateManager';
 
 interface DeskListProps {
   desks: Desk[],
@@ -45,7 +44,7 @@ export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChan
                   isUserAdmin &&
                     <Button
                     text="Remove"
-                    active={true}
+                    active={desk.username === null}
                     spacing={3}
                     type="danger"
                     onClick={() => onRemoveClick(desk.deskName)}

@@ -118,13 +118,13 @@ public class DeskController : ControllerBase
                 logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
-            
+
             bool isDeskRemoved = deskRepository.RemoveDesk(deskInfo);
 
             if (!isDeskRemoved)
             {
                 logger.LogInformation("Remove: 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound);
+                return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
             logger.LogInformation("Remove: Status 200, OK");
@@ -162,9 +162,8 @@ public class DeskController : ControllerBase
     }
 
     [HttpPut("Book")]
-    public IActionResult Book([FromHeader] string token, [FromBody] BookingInformation bookingInformation)
+    public IActionResult Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo)
     {
-        //To finish
         try
         {
             if (!ModelState.IsValid)
@@ -181,11 +180,19 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            ClientsideDesk? clientsideDesk = deskRepository.BookDesk(username, bookingInformation);
+            bool deskExists = deskRepository.CheckIfDeskExists(bookingInfo.DeskName);
+
+            if (!deskExists)
+            {
+                logger.LogInformation("Remove: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            ClientsideDesk? clientsideDesk = deskRepository.BookDesk(username, bookingInfo);
 
             if (clientsideDesk == null)
             {
-                logger.LogInformation("BookDesk: Status 404, Not found");
+                logger.LogInformation("BookDesk: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
@@ -201,7 +208,6 @@ public class DeskController : ControllerBase
     [HttpPut("Unbook")]
     public IActionResult Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo)
     {
-        //To finish
         try
         {
             if (!ModelState.IsValid)
