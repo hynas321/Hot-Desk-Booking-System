@@ -69,6 +69,22 @@ export default function DesksView() {
     setDesks(updatedDesks);
   }
 
+  const handleUnbookButtonClick = async (deskName: string) => {
+    const unbookedDesk: Desk = await apiRequestHandler.unbookDesk(token, deskName, locationName);
+
+    if (unbookedDesk.deskName === undefined || !unbookedDesk) {
+      alertManager.displayAlert(`Could not unbook the desk: ${deskName}`, "danger");
+      return;
+    }
+
+    const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
+
+    const updatedDesks = [...desks];
+    updatedDesks[deskIndex] = unbookedDesk;
+
+    setDesks(updatedDesks);
+  }
+
   const handleRemoveButtonClick = async (deskName: string) => {
     try {
       const removeDeskStatusCode = await apiRequestHandler.removeDesk(token, deskName, locationName);
@@ -151,6 +167,7 @@ export default function DesksView() {
           <DeskList
             desks={desks}
             onBookClick={handleBookButtonClick}
+            onUnbookClick={handleUnbookButtonClick}
             onRemoveClick={handleRemoveButtonClick}
             onRangeChange={handleDaysRangeChange}
           />

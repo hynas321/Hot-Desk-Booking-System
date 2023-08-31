@@ -78,7 +78,7 @@ export default function Signin() {
         </div>
         <div className="card mt-4">
           <div className="card-body">
-            {"If you do not have your credentials, please ask the administrator"}
+            {"If you do not have your credentials, please ask the supervisor"}
             <div className="text-secondary">{"Available in the README.md file :)"}</div>
           </div>
         </div>

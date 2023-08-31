@@ -7,11 +7,12 @@ import { useAppSelector } from './redux/hooks';
 interface DeskListProps {
   desks: Desk[],
   onBookClick: (deskName: string) => void,
+  onUnbookClick: (deskName: string) => void,
   onRemoveClick: (deskName: string) => void
   onRangeChange: (value: number) => void
 }
 
-export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChange}: DeskListProps) {
+export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveClick, onRangeChange}: DeskListProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const user = useAppSelector((state) => state.user);
 
@@ -50,13 +51,24 @@ export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChan
                   }
                 </div>
                 <div className="d-flex">
-                  <Button
-                    text="Book desk"
-                    active={desk.username === null}
-                    spacing={0}
-                    type="primary"
-                    onClick={() => onBookClick(desk.deskName)}
-                  />
+                  {
+                    desk.username === user.username ?
+                      <Button
+                        text="Unbook desk"
+                        active={desk.username === user.username}
+                        spacing={0}
+                        type="primary"
+                        onClick={() => onUnbookClick(desk.deskName)}
+                      />
+                    :
+                      <Button
+                        text="Book desk"
+                        active={desk.username === null}
+                        spacing={0}
+                        type="primary"
+                        onClick={() => onBookClick(desk.deskName)}
+                      />
+                  }
                   {
                     user.isAdmin &&
                       <Button
