@@ -23,18 +23,18 @@ function Range({title, suffix, minValue, maxValue, step, defaultValue, onChange}
   
   return (
     <div className="d-flex align-items-center">
-        <label className="form-label mx-2">{`${title}: ${value} ${suffix}`}</label>
-        <div className="flex-grow-1">
-            <input 
-                className="form-range"
-                type="range"
-                value={value}
-                min={minValue}
-                max={maxValue}
-                step={step}
-                onChange={handleChange}
-            />
-        </div>
+      <label className="form-label mx-2">{`${title}: ${value} ${suffix}`}</label>
+      <div className="flex-grow-1">
+        <input 
+            className="form-range"
+            type="range"
+            value={value}
+            min={minValue}
+            max={maxValue}
+            step={step}
+            onChange={handleChange}
+        />
+      </div>
   </div>
   )
 }

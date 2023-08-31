@@ -6,7 +6,6 @@ public class UserCredentials
 {
 	[Required]
 	[MinLength(5)]
-	[MaxLength(20)]
 	public string Username { get; set; } = string.Empty;
 	[Required]
 	[MinLength(5)]
