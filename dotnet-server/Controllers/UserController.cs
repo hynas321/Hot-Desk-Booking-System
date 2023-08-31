@@ -141,7 +141,7 @@ public class UserController : ControllerBase
 
             if (username == null)
             {
-                logger.LogError("GetBooking: Status 401, Unauthorized");
+                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
@@ -149,7 +149,7 @@ public class UserController : ControllerBase
 
             if (user == null)
             {
-                logger.LogError("GetBooking: Status 401, Unauthorized");
+                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
@@ -157,11 +157,11 @@ public class UserController : ControllerBase
 
             if (bookingInfo == null)
             {
-                logger.LogInformation("GetBooking: Status 404, Not found");
+                logger.LogInformation("GetBookedDeskInfo: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            logger.LogInformation("GetBooking: Status 200, OK", JsonHelper.Serialize(bookingInfo));
+            logger.LogInformation("GetBookedDeskInfo: Status 200, OK", JsonHelper.Serialize(bookingInfo));
             return StatusCode(StatusCodes.Status200OK);
 
         }

@@ -42,20 +42,23 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
+            if (token != configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                string? username = tokenManager.GetUsername(token);
 
-            User? user = userRepository.GetUser(username);
+                if (username == null)
+                {
+                    logger.LogInformation("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                User? user = userRepository.GetUser(username);
+
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
@@ -89,20 +92,23 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
+            if (token != configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                string? username = tokenManager.GetUsername(token);
 
-            User? user = userRepository.GetUser(username);
+                if (username == null)
+                {
+                    logger.LogInformation("Remove: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                User? user = userRepository.GetUser(username);
+
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Remove: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
@@ -163,7 +169,9 @@ public class LocationController : ControllerBase
 
             foreach (var desk in location.Desks)
             {
-                string? usernameProperty = "-";
+                #nullable disable
+
+                string usernameProperty = "-";
 
                 if (user.IsAdmin == true || desk?.Booking?.Username == username) {
                     usernameProperty = desk.Booking?.Username;
@@ -219,7 +227,7 @@ public class LocationController : ControllerBase
                 );
             }
 
-            logger.LogInformation("GetAll: Status 200, OK");
+            logger.LogInformation("GetAllNames: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideLocations));
 
         }

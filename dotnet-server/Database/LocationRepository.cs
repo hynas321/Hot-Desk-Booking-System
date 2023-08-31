@@ -4,6 +4,7 @@ namespace Dotnet.Server.Database;
 
 public class LocationRepository
 {
+    #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
 
     public LocationRepository(ApplicationDbContext dbContext)

@@ -5,6 +5,7 @@ namespace Dotnet.Server.Database;
 
 public class UserRepository
 {
+    #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
 
     public UserRepository(ApplicationDbContext dbContext)
@@ -81,7 +82,7 @@ public class UserRepository
         {
             throw new NullReferenceException();
         }
-
+        
         Desk? desk = dbContext?.Desks?.FirstOrDefault(d => d.Booking.Username == username);
         
         if (desk != null)

@@ -12,7 +12,7 @@ namespace dotnet_server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Booking",
+                name: "Bookings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
@@ -23,7 +23,7 @@ namespace dotnet_server.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Booking", x => x.Id);
+                    table.PrimaryKey("PK_Bookings", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -64,9 +64,9 @@ namespace dotnet_server.Migrations
                 {
                     table.PrimaryKey("PK_Desks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Desks_Booking_BookingId",
+                        name: "FK_Desks_Bookings_BookingId",
                         column: x => x.BookingId,
-                        principalTable: "Booking",
+                        principalTable: "Bookings",
                         principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Desks_Locations_LocationName",
@@ -96,7 +96,7 @@ namespace dotnet_server.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "Booking");
+                name: "Bookings");
 
             migrationBuilder.DropTable(
                 name: "Locations");

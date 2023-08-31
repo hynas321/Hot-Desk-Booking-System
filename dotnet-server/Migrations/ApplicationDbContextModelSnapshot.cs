@@ -37,7 +37,7 @@ namespace dotnet_server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Booking");
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("Desk", b =>

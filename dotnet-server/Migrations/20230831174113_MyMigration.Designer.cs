@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace dotnet_server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230831121015_MyMigration")]
+    [Migration("20230831174113_MyMigration")]
     partial class MyMigration
     {
         /// <inheritdoc />
@@ -40,7 +40,7 @@ namespace dotnet_server.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Booking");
+                    b.ToTable("Bookings");
                 });
 
             modelBuilder.Entity("Desk", b =>
