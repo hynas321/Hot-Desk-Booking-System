@@ -101,7 +101,7 @@ public class DeskRepository
 
                 desk.Username = username;
                 desk.BookingStartTime = localTime;
-                desk.BookingEndTime = localTime.AddDays(bookingInformation.Days);
+                desk.BookingEndTime = localTime.AddDays(bookingInformation.Days - 1);
 
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
