@@ -126,13 +126,6 @@ export default function LocationsView() {
               type={"success"}
               onClick={handleAddButtonClick}
             />
-            <Button
-              text={"Add user"}
-              active={true}
-              spacing={1}
-              type={"warning"}
-              onClick={handleAddButtonClick}
-            />
           </>
         }
           <LocationList 

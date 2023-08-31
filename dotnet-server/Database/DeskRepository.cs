@@ -106,8 +106,8 @@ public class DeskRepository
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
 
-                string bookingStartTimeString = desk.BookingStartTime.Value.ToString("dd-MM-yyyy HH:mm:ss");
-                string bookingEndTimeString = desk.BookingEndTime.Value.ToString("dd-MM-yyyy HH:mm:ss");
+                string bookingStartTimeString = desk.BookingStartTime.Value.ToString("dd-MM-yyyy");
+                string bookingEndTimeString = desk.BookingEndTime.Value.ToString("dd-MM-yyyy");
 
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {

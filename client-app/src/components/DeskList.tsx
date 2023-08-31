@@ -29,7 +29,15 @@ export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChan
             >
               <div><b>{`${desk.deskName}`}</b></div>
               <div className={`d-flex ${desk.username === null ? "text-success" : "text-danger"}`}>
-                {`${desk.username === null ? "Available" : `Booked until ${desk.bookingEndTime}`}` }
+              {desk.username === null ? (
+                "Available"
+              ) : (
+                <>
+                  {"Booked on " + desk.bookingStartTime}
+                  <br />
+                  {"Booked until end of " + desk.bookingEndTime}
+                </>
+              )}
               </div>
               <div className="text-primary mb-2">{ (isUserAdmin && desk.username !== null) && `Booked by ${desk.username}`}</div>
               <div className="d-flex">

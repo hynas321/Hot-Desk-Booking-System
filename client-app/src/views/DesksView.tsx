@@ -99,7 +99,7 @@ export default function DesksView() {
       const newDesk: Desk = {
         deskName: deskName,
         username: null,
-        bookingStartDate: null,
+        bookingStartTime: null,
         bookingEndTime: null,
       };
 

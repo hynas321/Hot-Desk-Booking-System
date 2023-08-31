@@ -177,8 +177,8 @@ public class LocationController : ControllerBase
                     {
                         DeskName = desk.DeskName,
                         Username = usernameProperty,
-                        BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null,
-                        BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null
+                        BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy") : null,
+                        BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy") : null
                     }
                 );
             }
