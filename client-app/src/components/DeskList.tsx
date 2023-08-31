@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Desk } from '../types/Desk'
 import Button from './Button'
 import Range from './Range'
@@ -44,7 +44,7 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                 </div>
                 <div className="text-primary mb-2">
                   {
-                    desk.username == user.username ?
+                    desk.username === user.username ?
                       "Your booking"
                     :
                       (user.isAdmin && desk.username !== null) && `Booked by ${desk.username}`

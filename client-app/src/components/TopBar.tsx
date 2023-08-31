@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 import config from './../config.json';
 import { useAppSelector } from "./redux/hooks";
 import Alert from "./Alert";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updatedBookedDesk, updatedBookedDeskLocation, updatedIsAdmin, updatedUsername } from "./redux/slices/user-slice";
 import { UserInfoOutput } from "../http/ApiInterfaces";
-import { Desk } from "../types/Desk";
+
 
 interface TopBarProps {
   isUserInfoVisible: boolean;
@@ -17,7 +17,6 @@ interface TopBarProps {
 
 export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
-  const [bookedDesk, setBookedDesk] = useState<Desk | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user)
@@ -25,7 +24,7 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const apiRequestHandler = new ApiRequestHandler();
   
   useEffect(() => {
-    if (!isUserInfoVisible && user.username == "User") {
+    if (!isUserInfoVisible && user.username === "User") {
       return;
     }
 
