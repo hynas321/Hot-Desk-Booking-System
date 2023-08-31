@@ -55,7 +55,8 @@ export default function Signin() {
           <div className="form-group mt-2">
             <label>Username</label>
             <TextForm
-              placeholderValue={"Min 5 characters"}
+              placeholderValue="Min 5 characters"
+              inputType="text"
               onChange={(value) => setUsername(value)}
             />
           </div>
@@ -63,6 +64,7 @@ export default function Signin() {
             <label>Password</label>
             <TextForm
               placeholderValue={"Min 5 characters"}
+              inputType="password"
               onChange={(value) => setPassword(value)}
             />
           </div>

@@ -81,16 +81,6 @@ public class DeskRepository
         return false;
     }
 
-    public async Task<List<Desk>> GetAllDesksAsync()
-    {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        return await dbContext.Desks.ToListAsync();
-    }
-
     public List<Desk> GetAllDesks()
     {
         if (dbContext.Desks == null)

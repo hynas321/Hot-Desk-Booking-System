@@ -1,4 +1,4 @@
-using Dotnet.Server.Http;
+namespace Dotnet.Server.Http;
 
 public class UserInfoOutput {
     public string? Username { get; set; }

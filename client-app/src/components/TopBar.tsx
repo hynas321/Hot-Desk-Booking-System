@@ -50,6 +50,12 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
 
   const handleButtonClick = () => {
     apiRequestHandler.logOut(token);
+
+    dispatch(updatedUsername("User"));
+    dispatch(updatedIsAdmin(false));
+    dispatch(updatedBookedDesk(null));
+    dispatch(updatedBookedDeskLocation(null));
+
     navigate(config.mainViewClientEndpoint);
   }
 

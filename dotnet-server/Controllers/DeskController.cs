@@ -142,28 +142,4 @@ public class DeskController : ControllerBase
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
-
-    [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
-    {
-        try
-        {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("GetAll: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            List<Desk> desks = await deskRepository.GetAllDesksAsync();
-
-            logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, desks);
-
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-    }
 }
