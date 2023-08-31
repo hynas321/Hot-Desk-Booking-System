@@ -13,7 +13,7 @@ interface DeskListProps {
 
 export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChange}: DeskListProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const isUserAdmin = useAppSelector((state) => state.user.isAdmin);
+  const user = useAppSelector((state) => state.user);
 
   return (
     <>
@@ -27,50 +27,59 @@ export default function DeskList({desks, onBookClick, onRemoveClick, onRangeChan
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              <div><b>{`${desk.deskName}`}</b></div>
-              <div className={`d-flex ${desk.username === null ? "text-success" : "text-danger"}`}>
-              {desk.username === null ? (
-                "Available"
-              ) : (
-                <>
-                  {"Booked on " + desk.bookingStartTime}
-                  <br />
-                  {"Booked until end of " + desk.bookingEndTime}
-                </>
-              )}
+              <div>
+                <b>{`${desk.deskName}`}</b>
               </div>
-              <div className="text-primary mb-2">{ (isUserAdmin && desk.username !== null) && `Booked by ${desk.username}`}</div>
-              <div className="d-flex">
-                <Button
-                  text="Book desk"
-                  active={desk.username === null}
-                  spacing={0}
-                  type="primary"
-                  onClick={() => onBookClick(desk.deskName)}
-                />
-                {
-                  isUserAdmin &&
-                    <Button
-                    text="Remove"
+              <div className={`d-flex ${desk.username === null ? "text-success" : "text-danger"}`}>
+                {desk.username === null ? (
+                  "Available"
+                ) : (
+                  <>
+                    {"Booked on " + desk.bookingStartTime}
+                    <br />
+                    {"Booked until end of " + desk.bookingEndTime}
+                  </>
+                )}
+                </div>
+                <div className="text-primary mb-2">
+                  {
+                    desk.username == user.username ?
+                      "Your booking"
+                    :
+                      (user.isAdmin && desk.username !== null) && `Booked by ${desk.username}`
+                  }
+                </div>
+                <div className="d-flex">
+                  <Button
+                    text="Book desk"
                     active={desk.username === null}
-                    spacing={3}
-                    type="danger"
-                    onClick={() => onRemoveClick(desk.deskName)}
+                    spacing={0}
+                    type="primary"
+                    onClick={() => onBookClick(desk.deskName)}
                   />
-                }
-                { 
-                  desk.username === null && hoveredIndex === index && (
-                    <Range
-                      title={"Booking timespan"}
-                      suffix={"days"}
-                      minValue={1}
-                      maxValue={7}
-                      step={1}
-                      defaultValue={1}
-                      onChange={onRangeChange}
+                  {
+                    user.isAdmin &&
+                      <Button
+                      text="Remove"
+                      active={desk.username === null}
+                      spacing={3}
+                      type="danger"
+                      onClick={() => onRemoveClick(desk.deskName)}
                     />
-                  )
-                }
+                  }
+                  { 
+                    desk.username === null && hoveredIndex === index && (
+                      <Range
+                        title={"Booking timespan"}
+                        suffix={"days"}
+                        minValue={1}
+                        maxValue={7}
+                        step={1}
+                        defaultValue={1}
+                        onChange={onRangeChange}
+                      />
+                    )
+                  }
               </div>  
             </li>
           )) 

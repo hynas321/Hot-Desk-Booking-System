@@ -57,7 +57,7 @@ export default function DesksView() {
     const bookedDesk: Desk = await apiRequestHandler.bookDesk(token, deskName, locationName, bookingDays);
 
     if (bookedDesk.deskName === undefined || !bookedDesk) {
-      alertManager.displayAlert(`Could not book the desk: ${deskName}`, "danger");
+      alertManager.displayAlert(`Could not book the desk: ${deskName}. Make sure you have no pending booking`, "danger");
       return;
     }
 
