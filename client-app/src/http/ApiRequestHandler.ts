@@ -1,7 +1,7 @@
 import config from './../config.json';
 import ApiEndpoints from './ApiEndpoints';
 import ApiHeaders from './ApiHeaders';
-import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials, UserIsAdminOutput } from './ApiInterfaces';
+import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials, UserInfoOutput } from './ApiInterfaces';
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
@@ -56,9 +56,9 @@ class HttpRequestHandler {
     }
   }
 
-  async checkIsAdminByToken(token: string): Promise<any> {
+  async getUserInfo(token: string): Promise<any> {
     try {
-        const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.isAdminByToken}`, {
+        const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ class HttpRequestHandler {
           throw new Error("Error");
         } 
   
-        return await response.json() as UserIsAdminOutput;
+        return await response.json() as UserInfoOutput;
     }
     catch (error) {
       return error;

@@ -1,10 +1,11 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
-using dotnet_server.Configuration;
+using Dotnet.Server.Configuration;
+using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
 
-namespace dotnet_server.Controllers;
+namespace Dotnet.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -13,18 +14,22 @@ public class UserController : ControllerBase
     private readonly ILogger<UserController> logger;
     private readonly IConfiguration configuration;
     private readonly UserRepository userRepository;
+    private readonly DeskRepository deskRepository;
+    private readonly LocationRepository locationRepository;
     private readonly SessionTokenManager tokenManager;
 
     public UserController(
         ILogger<UserController> logger,
         IConfiguration configuration,
         UserRepository userRepository,
+        DeskRepository deskRepository,
         SessionTokenManager tokenManager
     )
     {
         this.logger = logger;
         this.configuration = configuration;
         this.userRepository = userRepository;
+        this.deskRepository = deskRepository;
         this.tokenManager = tokenManager;
     }
 
@@ -39,7 +44,8 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken]) {
+            if (token != configuration[Config.GlobalAdminToken])
+            {
                 string? username = tokenManager.GetUsername(token);
 
                 if (username == null)
@@ -298,7 +304,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            UserIsAdminOutput output = new UserIsAdminOutput()
+            UserInfoOutput output = new UserInfoOutput()
             {
                 IsAdmin = user.IsAdmin
             };
@@ -313,8 +319,8 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("IsAdminByToken")]
-    public IActionResult IsAdminByToken([FromHeader] string token)
+    [HttpGet("GetUserInfo")]
+    public IActionResult GetUserInfo([FromHeader] string token)
     {
         try
         {
@@ -334,10 +340,29 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            UserIsAdminOutput output = new UserIsAdminOutput()
+            List<Desk> desks = deskRepository.GetAllDesks();
+            Desk? bookedDesk = desks.FirstOrDefault(d => d.Booking?.Username == username);
+            ClientsideDesk? clientsideDesk = null;
+            
+            if (bookedDesk != null)
+            {
+                #nullable disable
+                clientsideDesk = new ClientsideDesk()
+                {
+                    DeskName = bookedDesk.DeskName,
+                    Username = username,
+                    StartTime = bookedDesk.Booking.StartTime.Value.ToString("dd-MM-yyyy"),
+                    EndTime = bookedDesk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
+                };
+                #nullable enable
+            }
+
+            UserInfoOutput output = new UserInfoOutput()
             {
                 Username = user.Username,
-                IsAdmin = user.IsAdmin
+                IsAdmin = user.IsAdmin,
+                BookedDesk = clientsideDesk,
+                BookedDeskLocation = bookedDesk?.Location?.LocationName
             };
 
             logger.LogInformation("IsAdmin: Status 200, OK");

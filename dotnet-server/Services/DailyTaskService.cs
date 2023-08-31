@@ -1,5 +1,6 @@
 using Dotnet.Server.Database;
-using Microsoft.EntityFrameworkCore;
+
+namespace Dotnet.Server.Services;
 
 public class DailyTaskService : IHostedService, IDisposable
 {

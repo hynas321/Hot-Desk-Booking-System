@@ -10,13 +10,17 @@ import TopBar from '../components/TopBar';
 import useLocalStorageState from 'use-local-storage-state';
 import { useAppSelector } from '../components/redux/hooks';
 import { AlertManager } from '../managers/AlertManager';
+import { useDispatch } from 'react-redux';
+import { updatedBookedDesk, updatedBookedDeskLocation } from '../components/redux/slices/user-slice';
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
+  const [refreshComponent, setRefreshComponent] = useState<boolean>(false);
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [isDeskListVisible, setIsDeskListVisible] = useState<boolean>(false);
   const [bookingDays, setBookingDays] = useState<number>(1);
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
   const { locationName } = location.state ?? "-";
@@ -68,6 +72,8 @@ export default function DesksView() {
     updatedDesks[deskIndex] = bookedDesk;
 
     setDesks(updatedDesks);
+    dispatch(updatedBookedDesk(bookedDesk));
+    dispatch(updatedBookedDeskLocation(locationName));
   }
 
   const handleUnbookButtonClick = async (deskName: string) => {
@@ -84,6 +90,8 @@ export default function DesksView() {
     updatedDesks[deskIndex] = unbookedDesk;
 
     setDesks(updatedDesks);
+    dispatch(updatedBookedDesk(null));
+    dispatch(updatedBookedDeskLocation(locationName));
   }
 
   const handleRemoveButtonClick = async (deskName: string) => {

@@ -1,10 +1,11 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
+using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using dotnet_server.Configuration;
+using Dotnet.Server.Configuration;
 
-namespace dotnet_server.Controllers;
+namespace Dotnet.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]

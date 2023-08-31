@@ -1,6 +1,7 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Microsoft.EntityFrameworkCore;
+using Dotnet.Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

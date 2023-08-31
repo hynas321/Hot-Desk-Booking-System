@@ -5,10 +5,11 @@ import { useNavigate } from "react-router-dom";
 import config from './../config.json';
 import { useAppSelector } from "./redux/hooks";
 import Alert from "./Alert";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { updatedIsAdmin, updatedUsername } from "./redux/slices/user-slice";
-import { UserIsAdminOutput } from "../http/ApiInterfaces";
+import { updatedBookedDesk, updatedBookedDeskLocation, updatedIsAdmin, updatedUsername } from "./redux/slices/user-slice";
+import { UserInfoOutput } from "../http/ApiInterfaces";
+import { Desk } from "../types/Desk";
 
 interface TopBarProps {
   isUserInfoVisible: boolean;
@@ -16,6 +17,7 @@ interface TopBarProps {
 
 export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const [bookedDesk, setBookedDesk] = useState<Desk | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user)
@@ -27,19 +29,24 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
       return;
     }
 
-    const checkIsAdminAsync = async () => {
-      const isAdminObj: UserIsAdminOutput = await apiRequestHandler.checkIsAdminByToken(token);
+    const getUserInfo = async () => {
+      const userInfo: UserInfoOutput = await apiRequestHandler.getUserInfo(token);
       
-      if (!isAdminObj) {
+      if (!userInfo) {
         dispatch(updatedUsername("User"));
         return;
       }
 
-      dispatch(updatedIsAdmin(isAdminObj.isAdmin));
-      dispatch(updatedUsername(isAdminObj.username));
+      dispatch(updatedIsAdmin(userInfo.isAdmin));
+      dispatch(updatedUsername(userInfo.username));
+
+      if (userInfo.bookedDesk) {
+        dispatch(updatedBookedDesk(userInfo.bookedDesk))
+        dispatch(updatedBookedDeskLocation(userInfo.bookedDeskLocation))
+      }
     }
 
-    checkIsAdminAsync();
+    getUserInfo();
   }, []);
 
   const handleButtonClick = () => {
@@ -75,7 +82,14 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
       {
         isUserInfoVisible && (
           <div className="mb-3">
-            <h5 className="text-secondary">{`${user.isAdmin ? "Administrator" : "Employee"}:`} <b className="text-secondary">{user.username}</b></h5>
+            <h5 className="text-secondary">
+              {`${user.isAdmin ? "Administrator" : "Employee"}:`} <b className="text-secondary">{user.username}</b>
+            </h5>
+            <h6 className={`${user.bookedDesk === null ? "text-danger" : "text-primary"}`}>
+              {`Current booking: ${user.bookedDesk === null ?
+                "None" :
+                `${user.bookedDesk.deskName} in ${user.bookedDeskLocation} until ${user.bookedDesk.endTime}`}`}
+            </h6>
           </div>
             ) 
           }
