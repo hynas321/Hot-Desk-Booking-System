@@ -1,21 +1,28 @@
 using Dotnet.Server.Database;
+using Microsoft.EntityFrameworkCore;
 
 public class DailyTaskService : IHostedService, IDisposable
 {
     #nullable disable warnings
-    private readonly IServiceProvider? serviceProvider;
+    private readonly ILogger<DailyTaskService> logger;
+    private readonly IServiceScopeFactory serviceScopeFactory;
     private Timer? timer;
 
-    public DailyTaskService(IServiceProvider serviceProvider)
+    public DailyTaskService(
+        ILogger<DailyTaskService> logger,
+        IServiceScopeFactory serviceScopeFactory)
     {
-        this.serviceProvider = serviceProvider;
+        this.logger = logger;
+        this.serviceScopeFactory = serviceScopeFactory;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        DateTime now = DateTime.UtcNow;
-        DateTime nextRun = now.Date.AddDays(1);
-        TimeSpan timeUntilNextRun = nextRun - now;
+        DateTime utcNow = DateTime.UtcNow.AddDays(0);
+        TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
+        DateTime nextRun = utcNow.Date.AddDays(1);
+        TimeSpan timeUntilNextRun = nextRun - utcNow;
 
         timer = new Timer(DoWork, null, timeUntilNextRun, TimeSpan.FromDays(1));
 
@@ -24,29 +31,39 @@ public class DailyTaskService : IHostedService, IDisposable
 
     private void DoWork(object state)
     {
-        using (var scope = serviceProvider.CreateScope())
+        using (var scope = serviceScopeFactory.CreateScope())
         {
+            var serviceProvider = scope.ServiceProvider;
+            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
             var deskRepository = scope.ServiceProvider.GetRequiredService<DeskRepository>();
 
             List<Desk> desks = deskRepository.GetAllDesks();
+            logger.LogInformation("Checking for obsolete bookings...");
 
             for (int i = 0; i < desks.Count; i++)
             {
                 DateTime? bookingEnd = desks[i].Booking?.EndTime;
-                DateTime now = DateTime.UtcNow;
+
+                DateTime utcNow = DateTime.UtcNow.AddDays(0);
+                TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
 
                 if (bookingEnd.HasValue)
                 {
-                    TimeSpan difference = now - bookingEnd.Value;
+                    TimeSpan difference = localTime - bookingEnd.Value;
 
-                    if (difference.TotalDays >= 1)
+                    if (difference.Days >= 1)
                     {
                         desks[i].Booking.Username = null;
                         desks[i].Booking.StartTime = null;
                         desks[i].Booking.EndTime = null;
+                        dbContext.Update(desks[i]);
                     }
                 }
             }
+
+            dbContext.SaveChanges();
+            logger.LogInformation("Procedure complete");
         }
     }
 
