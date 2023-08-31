@@ -75,6 +75,29 @@ public class UserRepository
         return dbContext.Users.Any(user => user.Username == username);
     }
 
+    public DeskInformation? GetBookedDeskInformation(string username)
+    {
+        if (dbContext.Users == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        Desk desk = dbContext.Desks.FirstOrDefault(d => d.Username == username);
+        
+        if (desk != null)
+        {
+            DeskInformation booking = new DeskInformation()
+            {
+                DeskName = desk.DeskName,
+                LocationName = desk.Location.LocationName
+            };
+
+            return booking;
+        }
+
+        return null;
+    }
+
     public bool SetAdminStatus(string username, bool isAdmin)
     {
         if (dbContext.Users == null)

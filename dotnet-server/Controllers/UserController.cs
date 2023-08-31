@@ -88,20 +88,22 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
+            if (token != configuration[Config.GlobalAdminToken]) {
+                string? username = tokenManager.GetUsername(token);
 
-            if (username == null)
-            {
-                logger.LogError("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                if (username == null)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            User? user = userRepository.GetUser(username);
+                User? user = userRepository.GetUser(username);
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool userExists = userRepository.CheckIfUserExists(userToRemove.Username);
@@ -122,6 +124,46 @@ public class UserController : ControllerBase
 
             logger.LogInformation("Remove: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("GetBooking")]
+    public IActionResult GetBookedDeskInfo([FromHeader] string token)
+    {
+        try
+        {
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogError("GetBooking: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null)
+            {
+                logger.LogError("GetBooking: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            DeskInformation? bookingInfo = userRepository.GetBookedDeskInformation(username);
+
+            if (bookingInfo == null)
+            {
+                logger.LogInformation("GetBooking: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            logger.LogInformation("GetBooking: Status 200, OK", JsonHelper.Serialize(bookingInfo));
+            return StatusCode(StatusCodes.Status200OK);
+
         }
         catch (Exception ex)
         {
@@ -268,7 +310,7 @@ public class UserController : ControllerBase
 
     [HttpPut("SetAdmin")]
     public IActionResult SetAdmin(
-        [FromHeader] string globalAdminToken,
+        [FromHeader] string token,
         [FromBody] UserAdminStatus userAdminStatus
     )
     {
@@ -280,10 +322,22 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("SetAdmin: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+            if (token != configuration[Config.GlobalAdminToken]) {
+                string? username = tokenManager.GetUsername(token);
+
+                if (username == null)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
+
+                User? user = userRepository.GetUser(username);
+
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool statusSet = userRepository.SetAdminStatus(userAdminStatus.Username, userAdminStatus.IsAdmin);

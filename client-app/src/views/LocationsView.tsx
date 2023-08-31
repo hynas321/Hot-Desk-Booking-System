@@ -38,6 +38,12 @@ export default function LocationsView() {
     const fetchLocationsAsync = async () => {
       const fetchedLocations = await apiRequestHandler.getAllLocationNames();
       
+      if (!Array.isArray(fetchedLocations)) {
+        alertManager.displayAlert("Could not load locations", "danger");
+        setLocations([]);
+        return;
+      }
+
       setLocations(fetchedLocations);
 
       setTimeout(() => {

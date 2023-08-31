@@ -132,12 +132,28 @@ public class LocationController : ControllerBase
     }
 
     [HttpGet("GetDesks/{locationName}")]
-    public IActionResult GetDesks([FromRoute] string locationName)
+    public IActionResult GetDesks([FromHeader] string token, [FromRoute] string locationName)
     {
         try
         {
             Location? location = locationRepository.GetLocation(locationName);
             List<ClientsideDesk> clientsideDesks = new List<ClientsideDesk>();
+
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogInformation("GetDesks: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null)
+            {
+                logger.LogError("GetDesks: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
 
             if (location == null)
             {
@@ -147,11 +163,20 @@ public class LocationController : ControllerBase
 
             foreach (var desk in location.Desks)
             {
+                string? usernameProperty = "-";
+
+                if (user.IsAdmin == true || user.Username == username) {
+                    usernameProperty = desk.Username;
+                }
+                else {
+                    usernameProperty = desk.Username == null ? null : "-";
+                }
+
                 clientsideDesks.Add(
                     new ClientsideDesk()
                     {
                         DeskName = desk.DeskName,
-                        Username = desk.Username,
+                        Username = usernameProperty,
                         BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null,
                         BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy HH:mm:ss") : null
                     }

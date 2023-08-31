@@ -230,9 +230,23 @@ public class DeskController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool isDeskUnbooked = deskRepository.UnbookDesk(deskInfo);
+            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
 
-            return StatusCode(StatusCodes.Status200OK);
+            if (!deskExists)
+            {
+                logger.LogInformation("Remove: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            ClientsideDesk? clientsideDesk = deskRepository.UnbookDesk(deskInfo);
+
+            if (clientsideDesk == null)
+            {
+                logger.LogInformation("BookDesk: Status 500, Internal server error");
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesk));
         }
         catch (Exception ex)
         {

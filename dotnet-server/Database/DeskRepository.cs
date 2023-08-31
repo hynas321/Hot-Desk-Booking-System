@@ -90,7 +90,10 @@ public class DeskRepository
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == bookingInformation.DeskName);
 
-            if (desk != null && desk.Username == null)
+            List<Desk> desks = GetAllDesks();
+            bool existingAnyUserBookings = desks.Any(d => d.Username == username);
+
+            if (desk != null && desk.Username == null && !existingAnyUserBookings)
             {
                 DateTime utcNow = DateTime.UtcNow;
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
@@ -121,7 +124,7 @@ public class DeskRepository
         return null;
     }
 
-    public bool UnbookDesk(DeskInformation deskInformation)
+    public ClientsideDesk? UnbookDesk(DeskInformation deskInformation)
     {
         if (dbContext.Desks == null)
         {
@@ -143,11 +146,19 @@ public class DeskRepository
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
 
-                return true;
+                ClientsideDesk clientsideDesk = new ClientsideDesk()
+                {
+                    DeskName = desk.DeskName,
+                    Username = null,
+                    BookingStartTime = null,
+                    BookingEndTime = null
+                };
+
+                return clientsideDesk;
             }
         }
 
-        return false;
+        return null;
     }
 
     public async Task<List<Desk>> GetAllDesksAsync()
@@ -158,5 +169,15 @@ public class DeskRepository
         }
 
         return await dbContext.Desks.ToListAsync();
+    }
+
+    public List<Desk> GetAllDesks()
+    {
+        if (dbContext.Desks == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        return dbContext.Desks.ToList();
     }
 }

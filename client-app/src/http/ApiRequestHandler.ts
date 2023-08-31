@@ -96,7 +96,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.status;
+      return response.status;
     }
     catch (error) {
       return error;
@@ -122,7 +122,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.status;
+      return response.status;
     }
     catch (error) {
       return error;
@@ -149,12 +149,13 @@ class HttpRequestHandler {
     }
   }
 
-  async getDesks(locationName: string): Promise<any> {
+  async getDesks(token: string, locationName: string): Promise<any> {
     try {
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getDesks}/${locationName}`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          [ApiHeaders.token]: token
         }
       });
 

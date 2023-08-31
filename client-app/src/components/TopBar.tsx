@@ -51,18 +51,9 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
         isUserInfoVisible && (
           <div className="mb-3">
             <h5 className="text-secondary">{`${user.isAdmin ? "Administrator" : "Employee"}:`} <b className="text-secondary">{user.username}</b></h5>
-            <h6 className="text-danger">{"Your current reservation: none"}</h6>
           </div>
             ) 
           }
     </div>
   )
 }
-
-/*
-    <div>
-      <h3 className="text-center text-primary mt-3 mx-auto"><b>Hot Desk Booking System</b></h3>
-      
-
-    </div>
-*/
