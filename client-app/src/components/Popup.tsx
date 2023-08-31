@@ -50,6 +50,7 @@ function Popup({title, inputFormPlaceholderText, visible, onSubmit, onClose}: Po
         <h5>{title}</h5>
         <TextForm
           placeholderValue={inputFormPlaceholderText}
+          inputType="text"
           onChange={handleInputFormChange}
         />
         <div className="d-flex justify-content-end mt-2">

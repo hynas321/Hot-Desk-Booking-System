@@ -2,11 +2,12 @@ import { ForwardedRef, forwardRef, useEffect, useState } from 'react';
 
 interface InputFormProps {
   placeholderValue: string;
+  inputType: string;
   onChange: (value: string) => void;
 }
 
 const InputForm = forwardRef((
-    {placeholderValue, onChange}: InputFormProps,
+    {placeholderValue, inputType, onChange}: InputFormProps,
     ref: ForwardedRef<HTMLInputElement>
   ) => {
   const [value, setValue] = useState("");
@@ -24,6 +25,7 @@ const InputForm = forwardRef((
       {
         <input
           className="form-control"
+          type={inputType}
           placeholder={placeholderValue}
           onChange={handleChange}
           ref={ref}

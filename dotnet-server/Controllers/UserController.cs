@@ -15,9 +15,9 @@ public class UserController : ControllerBase
     private readonly IConfiguration configuration;
     private readonly UserRepository userRepository;
     private readonly DeskRepository deskRepository;
-    private readonly LocationRepository locationRepository;
     private readonly SessionTokenManager tokenManager;
 
+    #nullable disable
     public UserController(
         ILogger<UserController> logger,
         IConfiguration configuration,
@@ -32,6 +32,7 @@ public class UserController : ControllerBase
         this.deskRepository = deskRepository;
         this.tokenManager = tokenManager;
     }
+    #nullable enable
 
     [HttpPost("Add")]
     public IActionResult Add([FromHeader] string token, [FromBody] UserCredentials userCredentials)
