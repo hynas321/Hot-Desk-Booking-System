@@ -292,11 +292,17 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("IsAdminByUsername/{username}")]
-    public IActionResult IsAdminByUsername([FromRoute] string username)
+    [HttpGet("IsAdmin/{username}")]
+    public IActionResult IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username)
     {
         try
         {
+            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            {
+                logger.LogInformation("IsAdmin: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
             User? user = userRepository.GetUser(username);
 
             if (user == null)
@@ -305,13 +311,8 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            UserInfoOutput output = new UserInfoOutput()
-            {
-                IsAdmin = user.IsAdmin
-            };
-
             logger.LogInformation("IsAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return StatusCode(StatusCodes.Status200OK, user.IsAdmin);
         }
         catch (Exception ex)
         {

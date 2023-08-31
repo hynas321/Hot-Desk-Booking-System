@@ -38,7 +38,7 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                   <>
                     {"Booked on " + desk.startTime}
                     <br />
-                    {"Booked until end of " + desk.endTime}
+                    {"Booked until the end of " + desk.endTime}
                   </>
                 )}
                 </div>
