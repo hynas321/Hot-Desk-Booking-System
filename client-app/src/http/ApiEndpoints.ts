@@ -2,7 +2,7 @@ class ApiEndpoints {
   //UserController
   static logIn: string = "/api/User/LogIn";
   static logOut: string = "/api/User/LogOut";
-  static isAdmin: string = "/api/User/IsAdmin";
+  static getUserInfo: string = "/api/User/GetUserInfo";
 
   //LocationController
   static addLocation: string = "/api/Location/Add";
@@ -13,8 +13,10 @@ class ApiEndpoints {
   //DeskController
   static addDesk: string = "/api/Desk/Add";
   static removeDesk: string = "/api/Desk/Remove";
-  static bookDesk: string = "/api/Desk/Book";
-  static unbookDesk: string = "/api/Desk/Unbook";
+
+  //BookingController
+  static bookDesk: string = "/api/Booking/Book";
+  static unbookDesk: string = "/api/Booking/Unbook";
 }
   
   export default ApiEndpoints;

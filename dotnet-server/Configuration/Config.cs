@@ -1,4 +1,4 @@
-namespace dotnet_server.Configuration;
+namespace Dotnet.Server.Configuration;
 
 public class Config
 {

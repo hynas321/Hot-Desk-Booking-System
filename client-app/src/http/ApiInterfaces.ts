@@ -1,3 +1,5 @@
+import { Desk } from "../types/Desk";
+
 export interface BookingInformation {
   deskName: string;
   locationName: string;
@@ -20,6 +22,13 @@ export interface UserCredentials {
 
 export interface UserUsername {
   username: string;
+}
+
+export interface UserInfoOutput {
+  username: string;
+  isAdmin: boolean;
+  bookedDesk: Desk;
+  bookedDeskLocation: string;
 }
 
 export interface TokenOutput {

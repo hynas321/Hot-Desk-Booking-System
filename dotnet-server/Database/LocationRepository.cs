@@ -4,6 +4,7 @@ namespace Dotnet.Server.Database;
 
 public class LocationRepository
 {
+    #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
 
     public LocationRepository(ApplicationDbContext dbContext)
@@ -71,22 +72,5 @@ public class LocationRepository
         }
 
         return dbContext.Locations.Any(location => location.LocationName == locationName);
-    }
-
-    public int GetDeskCountInLocation(string locationName)
-    {
-        if (dbContext.Locations == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        Location? location = dbContext?.Locations?.FirstOrDefault(location => location.LocationName == locationName);
-
-        if (location != null)
-        {
-            return location.Desks.Count;
-        }
-
-        return -1;
     }
 }

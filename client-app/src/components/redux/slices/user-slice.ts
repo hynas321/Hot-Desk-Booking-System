@@ -1,13 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Desk } from '../../../types/Desk';
 
 export interface User {
   username: string,
-  isAdmin: boolean
+  isAdmin: boolean,
+  bookedDesk: Desk | null,
+  bookedDeskLocation: string | null
 };
 
 const initialState: User = {
   username: "User",
-  isAdmin: false
+  isAdmin: false,
+  bookedDesk: null,
+  bookedDeskLocation: null
 };
 
 const gameSettingsSlice = createSlice({
@@ -20,8 +25,14 @@ const gameSettingsSlice = createSlice({
     updatedIsAdmin(state, action: PayloadAction<boolean>) {
       state.isAdmin = action.payload;
     },
+    updatedBookedDesk(state, action: PayloadAction<Desk | null>) {
+      state.bookedDesk = action.payload;
+    },
+    updatedBookedDeskLocation(state, action: PayloadAction<string | null>) {
+      state.bookedDeskLocation = action.payload;
+    }
   }
 })
 
-export const { updatedUsername, updatedIsAdmin } = gameSettingsSlice.actions;
+export const { updatedUsername, updatedIsAdmin, updatedBookedDesk, updatedBookedDeskLocation } = gameSettingsSlice.actions;
 export default gameSettingsSlice.reducer;

@@ -1,10 +1,11 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Database;
 using Dotnet.Server.Http;
+using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
-using dotnet_server.Configuration;
+using Dotnet.Server.Configuration;
 
-namespace dotnet_server.Controllers;
+namespace Dotnet.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -42,20 +43,23 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
+            if (token != configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                string? username = tokenManager.GetUsername(token);
 
-            User? user = userRepository.GetUser(username);
+                if (username == null)
+                {
+                    logger.LogInformation("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Add: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                User? user = userRepository.GetUser(username);
+
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Add: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
@@ -89,20 +93,23 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
+            if (token != configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                string? username = tokenManager.GetUsername(token);
 
-            User? user = userRepository.GetUser(username);
+                if (username == null)
+                {
+                    logger.LogInformation("Remove: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            if (user == null || user.IsAdmin == false)
-            {
-                logger.LogError("Remove: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                User? user = userRepository.GetUser(username);
+
+                if (user == null || user.IsAdmin == false)
+                {
+                    logger.LogError("Remove: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
@@ -163,13 +170,15 @@ public class LocationController : ControllerBase
 
             foreach (var desk in location.Desks)
             {
-                string? usernameProperty = "-";
+                #nullable disable
 
-                if (user.IsAdmin == true || user.Username == username) {
-                    usernameProperty = desk.Username;
+                string usernameProperty = "-";
+
+                if (user.IsAdmin == true || desk?.Booking?.Username == username) {
+                    usernameProperty = desk.Booking?.Username;
                 }
                 else {
-                    usernameProperty = desk.Username == null ? null : "-";
+                    usernameProperty = desk.Booking?.Username == null ? null : "-";
                 }
 
                 clientsideDesks.Add(
@@ -177,8 +186,14 @@ public class LocationController : ControllerBase
                     {
                         DeskName = desk.DeskName,
                         Username = usernameProperty,
-                        BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy") : null,
-                        BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy") : null
+                        StartTime =
+                            desk.Booking.StartTime.HasValue ?
+                            desk.Booking.StartTime.Value.ToString("dd-MM-yyyy")
+                            : null,
+                        EndTime =
+                            desk.Booking.EndTime.HasValue ?
+                            desk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
+                            : null
                     }
                 );
             }
@@ -208,12 +223,12 @@ public class LocationController : ControllerBase
                     {
                         LocationName = location.LocationName,
                         TotalDeskCount = location.Desks.Count,
-                        AvailableDeskCount = location.Desks.Where(x => x.Username == null).Count()
+                        AvailableDeskCount = location.Desks.Where(x => x.Booking?.Username == null).Count()
                     }
                 );
             }
 
-            logger.LogInformation("GetAll: Status 200, OK");
+            logger.LogInformation("GetAllNames: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideLocations));
 
         }

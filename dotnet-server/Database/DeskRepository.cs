@@ -5,6 +5,7 @@ namespace Dotnet.Server.Database;
 
 public class DeskRepository
 {
+    #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
 
     public DeskRepository(ApplicationDbContext dbContext)
@@ -21,9 +22,12 @@ public class DeskRepository
             Desk desk = new Desk()
             {
                 DeskName = deskInformation.DeskName,
-                Username = null,
-                BookingStartTime = null,
-                BookingEndTime = null
+                Booking = new Booking()
+                {
+                    Username = null,
+                    StartTime = null,
+                    EndTime = null
+                }
             };
 
             location.Desks.Add(desk);
@@ -48,7 +52,7 @@ public class DeskRepository
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
 
-            if (desk != null && desk.Username == null)
+            if (desk != null && desk?.Booking?.Username == null)
             {
                 dbContext?.Desks.Remove(desk);
                 dbContext?.SaveChanges();
@@ -75,90 +79,6 @@ public class DeskRepository
         }
 
         return false;
-    }
-
-    public ClientsideDesk? BookDesk(string username, BookingInformation bookingInformation)
-    {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == bookingInformation.LocationName);
-
-        if (location != null)
-        {
-            Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == bookingInformation.DeskName);
-
-            List<Desk> desks = GetAllDesks();
-            bool existingAnyUserBookings = desks.Any(d => d.Username == username);
-
-            if (desk != null && desk.Username == null && !existingAnyUserBookings)
-            {
-                DateTime utcNow = DateTime.UtcNow;
-                TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
-                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
-
-                desk.Username = username;
-                desk.BookingStartTime = localTime;
-                desk.BookingEndTime = localTime.AddDays(bookingInformation.Days - 1);
-
-                dbContext?.Desks.Update(desk);
-                dbContext?.SaveChanges();
-
-                string bookingStartTimeString = desk.BookingStartTime.Value.ToString("dd-MM-yyyy");
-                string bookingEndTimeString = desk.BookingEndTime.Value.ToString("dd-MM-yyyy");
-
-                ClientsideDesk clientsideDesk = new ClientsideDesk()
-                {
-                    DeskName = desk.DeskName,
-                    Username = desk.Username,
-                    BookingStartTime = bookingStartTimeString,
-                    BookingEndTime = bookingEndTimeString
-                };
-
-                return clientsideDesk;
-            }
-        }
-
-        return null;
-    }
-
-    public ClientsideDesk? UnbookDesk(DeskInformation deskInformation)
-    {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
-
-        if (location != null)
-        {
-            Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
-
-            if (desk != null && desk.Username != null)
-            {
-                desk.Username = null;
-                desk.BookingStartTime = null;
-                desk.BookingEndTime = null;
-
-                dbContext?.Desks.Update(desk);
-                dbContext?.SaveChanges();
-
-                ClientsideDesk clientsideDesk = new ClientsideDesk()
-                {
-                    DeskName = desk.DeskName,
-                    Username = null,
-                    BookingStartTime = null,
-                    BookingEndTime = null
-                };
-
-                return clientsideDesk;
-            }
-        }
-
-        return null;
     }
 
     public async Task<List<Desk>> GetAllDesksAsync()

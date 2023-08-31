@@ -3,7 +3,7 @@ namespace Dotnet.Server.Http;
 public class ClientsideDesk
 {
     public string DeskName { get; set; } = string.Empty;
-    public string? Username { get; set; }
-    public string? BookingStartTime { get; set; }
-    public string? BookingEndTime { get; set; }
+    public string? Username { get; set; } = string.Empty;
+    public string? StartTime { get; set; } = string.Empty;
+    public string? EndTime { get; set; } = string.Empty;
 }

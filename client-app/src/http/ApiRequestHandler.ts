@@ -1,7 +1,7 @@
 import config from './../config.json';
 import ApiEndpoints from './ApiEndpoints';
 import ApiHeaders from './ApiHeaders';
-import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials } from './ApiInterfaces';
+import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials, UserInfoOutput } from './ApiInterfaces';
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
@@ -49,19 +49,20 @@ class HttpRequestHandler {
         throw new Error("Error");
       }
 
-      return await response.status;
+      return response.status;
     }
     catch (error) {
       return error;
     }
   }
 
-  async checkIsAdmin(username: string): Promise<any> {
+  async getUserInfo(token: string): Promise<any> {
     try {
-        const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.isAdmin}/${username}`, {
+        const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
           method: 'GET',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            [ApiHeaders.token]: token
           }
         });
   
@@ -69,12 +70,13 @@ class HttpRequestHandler {
           throw new Error("Error");
         } 
   
-        return await response.json();
+        return await response.json() as UserInfoOutput;
     }
     catch (error) {
       return error;
     }
   }
+  
 
   //Location requests
   async addLocation(token: string, name: string): Promise<any> {
@@ -191,7 +193,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.status;
+      return response.status;
     }
     catch (error) {
       return error;
@@ -218,7 +220,7 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.status;
+      return response.status;
     }
     catch (error) {
       return error;

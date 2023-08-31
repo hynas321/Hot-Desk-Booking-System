@@ -36,15 +36,15 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                   "Available"
                 ) : (
                   <>
-                    {"Booked on " + desk.bookingStartTime}
+                    {"Booked on " + desk.startTime}
                     <br />
-                    {"Booked until end of " + desk.bookingEndTime}
+                    {"Booked until end of " + desk.endTime}
                   </>
                 )}
                 </div>
                 <div className="text-primary mb-2">
                   {
-                    desk.username == user.username ?
+                    desk.username === user.username ?
                       "Your booking"
                     :
                       (user.isAdmin && desk.username !== null) && `Booked by ${desk.username}`
