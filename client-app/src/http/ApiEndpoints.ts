@@ -2,7 +2,7 @@ class ApiEndpoints {
   //UserController
   static logIn: string = "/api/User/LogIn";
   static logOut: string = "/api/User/LogOut";
-  static isAdmin: string = "/api/User/IsAdmin";
+  static isAdminByToken: string = "/api/User/IsAdminByToken";
 
   //LocationController
   static addLocation: string = "/api/Location/Add";

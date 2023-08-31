@@ -21,9 +21,12 @@ public class DeskRepository
             Desk desk = new Desk()
             {
                 DeskName = deskInformation.DeskName,
-                Username = null,
-                BookingStartTime = null,
-                BookingEndTime = null
+                Booking = new Booking()
+                {
+                    Username = null,
+                    StartTime = null,
+                    EndTime = null
+                }
             };
 
             location.Desks.Add(desk);
@@ -48,7 +51,7 @@ public class DeskRepository
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
 
-            if (desk != null && desk.Username == null)
+            if (desk != null && desk?.Booking?.Username == null)
             {
                 dbContext?.Desks.Remove(desk);
                 dbContext?.SaveChanges();
@@ -91,30 +94,30 @@ public class DeskRepository
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == bookingInformation.DeskName);
 
             List<Desk> desks = GetAllDesks();
-            bool existingAnyUserBookings = desks.Any(d => d.Username == username);
+            bool existingAnyUserBookings = desks.Any(d => d.Booking?.Username == username);
 
-            if (desk != null && desk.Username == null && !existingAnyUserBookings)
+            if (desk != null && desk?.Booking?.Username == null && !existingAnyUserBookings)
             {
                 DateTime utcNow = DateTime.UtcNow;
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
                 DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
 
-                desk.Username = username;
-                desk.BookingStartTime = localTime;
-                desk.BookingEndTime = localTime.AddDays(bookingInformation.Days - 1);
+                desk.Booking.Username = username;
+                desk.Booking.StartTime = localTime;
+                desk.Booking.EndTime = localTime.AddDays(bookingInformation.Days - 1);
 
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
 
-                string bookingStartTimeString = desk.BookingStartTime.Value.ToString("dd-MM-yyyy");
-                string bookingEndTimeString = desk.BookingEndTime.Value.ToString("dd-MM-yyyy");
+                string bookingStartTimeString = desk.Booking.StartTime.Value.ToString("dd-MM-yyyy");
+                string bookingEndTimeString = desk.Booking.EndTime.Value.ToString("dd-MM-yyyy");
 
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {
                     DeskName = desk.DeskName,
-                    Username = desk.Username,
-                    BookingStartTime = bookingStartTimeString,
-                    BookingEndTime = bookingEndTimeString
+                    Username = desk.Booking.Username,
+                    StartTime = bookingStartTimeString,
+                    EndTime = bookingEndTimeString
                 };
 
                 return clientsideDesk;
@@ -137,11 +140,11 @@ public class DeskRepository
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
 
-            if (desk != null && desk.Username != null)
+            if (desk != null && desk?.Booking?.Username != null)
             {
-                desk.Username = null;
-                desk.BookingStartTime = null;
-                desk.BookingEndTime = null;
+                desk.Booking.Username = null;
+                desk.Booking.StartTime = null;
+                desk.Booking.EndTime = null;
 
                 dbContext?.Desks.Update(desk);
                 dbContext?.SaveChanges();
@@ -150,8 +153,8 @@ public class DeskRepository
                 {
                     DeskName = desk.DeskName,
                     Username = null,
-                    BookingStartTime = null,
-                    BookingEndTime = null
+                    StartTime = null,
+                    EndTime = null
                 };
 
                 return clientsideDesk;

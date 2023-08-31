@@ -5,6 +5,10 @@ import { useNavigate } from "react-router-dom";
 import config from './../config.json';
 import { useAppSelector } from "./redux/hooks";
 import Alert from "./Alert";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { updatedIsAdmin, updatedUsername } from "./redux/slices/user-slice";
+import { UserIsAdminOutput } from "../http/ApiInterfaces";
 
 interface TopBarProps {
   isUserInfoVisible: boolean;
@@ -12,11 +16,32 @@ interface TopBarProps {
 
 export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user)
 
   const apiRequestHandler = new ApiRequestHandler();
   
+  useEffect(() => {
+    if (!isUserInfoVisible && user.username == "User") {
+      return;
+    }
+
+    const checkIsAdminAsync = async () => {
+      const isAdminObj: UserIsAdminOutput = await apiRequestHandler.checkIsAdminByToken(token);
+      
+      if (!isAdminObj) {
+        dispatch(updatedUsername("User"));
+        return;
+      }
+
+      dispatch(updatedIsAdmin(isAdminObj.isAdmin));
+      dispatch(updatedUsername(isAdminObj.username));
+    }
+
+    checkIsAdminAsync();
+  }, []);
+
   const handleButtonClick = () => {
     apiRequestHandler.logOut(token);
     navigate(config.mainViewClientEndpoint);

@@ -82,7 +82,7 @@ public class UserRepository
             throw new NullReferenceException();
         }
 
-        Desk desk = dbContext.Desks.FirstOrDefault(d => d.Username == username);
+        Desk? desk = dbContext?.Desks?.FirstOrDefault(d => d.Booking.Username == username);
         
         if (desk != null)
         {

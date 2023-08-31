@@ -12,6 +12,21 @@ namespace dotnet_server.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
+                name: "Booking",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Username = table.Column<string>(type: "TEXT", nullable: true),
+                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    EndTime = table.Column<DateTime>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Booking", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Locations",
                 columns: table => new
                 {
@@ -42,20 +57,28 @@ namespace dotnet_server.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     DeskName = table.Column<string>(type: "TEXT", nullable: false),
-                    Username = table.Column<string>(type: "TEXT", nullable: true),
-                    BookingStartTime = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    BookingEndTime = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    BookingId = table.Column<int>(type: "INTEGER", nullable: true),
                     LocationName = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Desks", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_Desks_Booking_BookingId",
+                        column: x => x.BookingId,
+                        principalTable: "Booking",
+                        principalColumn: "Id");
+                    table.ForeignKey(
                         name: "FK_Desks_Locations_LocationName",
                         column: x => x.LocationName,
                         principalTable: "Locations",
                         principalColumn: "LocationName");
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Desks_BookingId",
+                table: "Desks",
+                column: "BookingId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Desks_LocationName",
@@ -71,6 +94,9 @@ namespace dotnet_server.Migrations
 
             migrationBuilder.DropTable(
                 name: "Users");
+
+            migrationBuilder.DropTable(
+                name: "Booking");
 
             migrationBuilder.DropTable(
                 name: "Locations");

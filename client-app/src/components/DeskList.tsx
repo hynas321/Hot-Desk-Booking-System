@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Desk } from '../types/Desk'
 import Button from './Button'
 import Range from './Range'
@@ -36,9 +36,9 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                   "Available"
                 ) : (
                   <>
-                    {"Booked on " + desk.bookingStartTime}
+                    {"Booked on " + desk.startTime}
                     <br />
-                    {"Booked until end of " + desk.bookingEndTime}
+                    {"Booked until end of " + desk.endTime}
                   </>
                 )}
                 </div>

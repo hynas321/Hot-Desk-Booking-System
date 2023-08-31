@@ -33,6 +33,7 @@ export default function DesksView() {
     const fetchDesksAsync = async () => {
       const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(token, locationName);
 
+      console.log(fetchedDesks);
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
         navigate(config.locationsViewClientEndpoint);
@@ -115,8 +116,8 @@ export default function DesksView() {
       const newDesk: Desk = {
         deskName: deskName,
         username: null,
-        bookingStartTime: null,
-        bookingEndTime: null,
+        startTime: null,
+        endTime: null
       };
 
       setDesks([...desks, newDesk]);

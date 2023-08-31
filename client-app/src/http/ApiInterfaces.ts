@@ -22,6 +22,11 @@ export interface UserUsername {
   username: string;
 }
 
+export interface UserIsAdminOutput {
+  username: string;
+  isAdmin: boolean;
+}
+
 export interface TokenOutput {
   token: string;
 }

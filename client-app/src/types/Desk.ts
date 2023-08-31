@@ -1,6 +1,6 @@
 export type Desk = {
   deskName: string,
   username: string | null,
-  bookingStartTime: string | null,
-  bookingEndTime: string | null,
+  startTime: string | null,
+  endTime: string | null,
 }

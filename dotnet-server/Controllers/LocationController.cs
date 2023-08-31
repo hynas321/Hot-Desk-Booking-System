@@ -165,11 +165,11 @@ public class LocationController : ControllerBase
             {
                 string? usernameProperty = "-";
 
-                if (user.IsAdmin == true || user.Username == username) {
-                    usernameProperty = desk.Username;
+                if (user.IsAdmin == true || desk?.Booking?.Username == username) {
+                    usernameProperty = desk.Booking?.Username;
                 }
                 else {
-                    usernameProperty = desk.Username == null ? null : "-";
+                    usernameProperty = desk.Booking?.Username == null ? null : "-";
                 }
 
                 clientsideDesks.Add(
@@ -177,8 +177,14 @@ public class LocationController : ControllerBase
                     {
                         DeskName = desk.DeskName,
                         Username = usernameProperty,
-                        BookingStartTime = desk.BookingStartTime.HasValue ? desk.BookingStartTime.Value.ToString("dd-MM-yyyy") : null,
-                        BookingEndTime = desk.BookingEndTime.HasValue ? desk.BookingEndTime.Value.ToString("dd-MM-yyyy") : null
+                        StartTime =
+                            desk.Booking.StartTime.HasValue ?
+                            desk.Booking.StartTime.Value.ToString("dd-MM-yyyy")
+                            : null,
+                        EndTime =
+                            desk.Booking.EndTime.HasValue ?
+                            desk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
+                            : null
                     }
                 );
             }
@@ -208,7 +214,7 @@ public class LocationController : ControllerBase
                     {
                         LocationName = location.LocationName,
                         TotalDeskCount = location.Desks.Count,
-                        AvailableDeskCount = location.Desks.Where(x => x.Username == null).Count()
+                        AvailableDeskCount = location.Desks.Where(x => x.Booking?.Username == null).Count()
                     }
                 );
             }

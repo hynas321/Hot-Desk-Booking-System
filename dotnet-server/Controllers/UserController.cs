@@ -285,8 +285,8 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("IsAdmin/{username}")]
-    public IActionResult IsAdmin([FromRoute] string username)
+    [HttpGet("IsAdminByUsername/{username}")]
+    public IActionResult IsAdminByUsername([FromRoute] string username)
     {
         try
         {
@@ -298,8 +298,50 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
+            UserIsAdminOutput output = new UserIsAdminOutput()
+            {
+                IsAdmin = user.IsAdmin
+            };
+
             logger.LogInformation("IsAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, user.IsAdmin);
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex.ToString());
+            return StatusCode(StatusCodes.Status500InternalServerError);
+        }
+    }
+
+    [HttpGet("IsAdminByToken")]
+    public IActionResult IsAdminByToken([FromHeader] string token)
+    {
+        try
+        {
+            string? username = tokenManager.GetUsername(token);
+
+            if (username == null)
+            {
+                logger.LogError("IsAdmin: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            User? user = userRepository.GetUser(username);
+
+            if (user == null)
+            {
+                logger.LogError("IsAdmin: Status 404, Not found");
+                return StatusCode(StatusCodes.Status404NotFound);
+            }
+
+            UserIsAdminOutput output = new UserIsAdminOutput()
+            {
+                Username = user.Username,
+                IsAdmin = user.IsAdmin
+            };
+
+            logger.LogInformation("IsAdmin: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
@@ -327,7 +369,7 @@ public class UserController : ControllerBase
 
                 if (username == null)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    logger.LogError("SetAdmin: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
@@ -335,7 +377,7 @@ public class UserController : ControllerBase
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    logger.LogError("SetAdmin: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }

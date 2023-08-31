@@ -26,15 +26,6 @@ export default function LocationsView() {
   const alertManager: AlertManager = new AlertManager();
 
   useEffect(() => {
-    //if (!token || token === "") {
-      //navigate(config.mainViewClientEndpoint);
-    //}
-
-    const checkIsAdminAsync = async () => {
-      const isAdmin = await apiRequestHandler.checkIsAdmin(user.username);
-      dispatch(updatedIsAdmin(isAdmin));
-    }
-
     const fetchLocationsAsync = async () => {
       const fetchedLocations = await apiRequestHandler.getAllLocationNames();
       
@@ -51,7 +42,6 @@ export default function LocationsView() {
       }, 500);
     }
     
-    checkIsAdminAsync();
     fetchLocationsAsync();
   }, []);
 

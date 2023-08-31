@@ -20,17 +20,34 @@ namespace dotnet_server.Migrations
                 .HasAnnotation("Proxies:CheckEquality", false)
                 .HasAnnotation("Proxies:LazyLoading", true);
 
+            modelBuilder.Entity("Booking", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("EndTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("StartTime")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Booking");
+                });
+
             modelBuilder.Entity("Desk", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime?>("BookingEndTime")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("BookingStartTime")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("DeskName")
                         .IsRequired()
@@ -39,10 +56,9 @@ namespace dotnet_server.Migrations
                     b.Property<string>("LocationName")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Username")
-                        .HasColumnType("TEXT");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("BookingId");
 
                     b.HasIndex("LocationName");
 
@@ -78,9 +94,15 @@ namespace dotnet_server.Migrations
 
             modelBuilder.Entity("Desk", b =>
                 {
+                    b.HasOne("Booking", "Booking")
+                        .WithMany()
+                        .HasForeignKey("BookingId");
+
                     b.HasOne("Location", "Location")
                         .WithMany("Desks")
                         .HasForeignKey("LocationName");
+
+                    b.Navigation("Booking");
 
                     b.Navigation("Location");
                 });
