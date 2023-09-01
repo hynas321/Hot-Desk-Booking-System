@@ -57,6 +57,7 @@ namespace dotnet_server.Migrations
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     DeskName = table.Column<string>(type: "TEXT", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
                     BookingId = table.Column<int>(type: "INTEGER", nullable: true),
                     LocationName = table.Column<string>(type: "TEXT", nullable: true)
                 },

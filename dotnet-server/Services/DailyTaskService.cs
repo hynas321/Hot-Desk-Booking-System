@@ -56,6 +56,7 @@ public class DailyTaskService : IHostedService, IDisposable
                     if (difference.Days >= 1)
                     {
                         desks[i].Booking.Username = null;
+                        desks[i].IsEnabled = true;
                         desks[i].Booking.StartTime = null;
                         desks[i].Booking.EndTime = null;
                         dbContext.Update(desks[i]);

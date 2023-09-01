@@ -145,21 +145,26 @@ public class LocationController : ControllerBase
         {
             Location? location = locationRepository.GetLocation(locationName);
             List<ClientsideDesk> clientsideDesks = new List<ClientsideDesk>();
+            string? username = null;
+            User? user = null;
 
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
+            if (token != configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("GetDesks: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
+                username = tokenManager.GetUsername(token);
 
-            User? user = userRepository.GetUser(username);
+                if (username == null)
+                {
+                    logger.LogInformation("GetDesks: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
 
-            if (user == null)
-            {
-                logger.LogError("GetDesks: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                user = userRepository.GetUser(username);
+
+                if (user == null)
+                {
+                    logger.LogError("GetDesks: Status 401, Unauthorized");
+                    return StatusCode(StatusCodes.Status401Unauthorized);
+                }
             }
 
             if (location == null)
@@ -185,6 +190,7 @@ public class LocationController : ControllerBase
                     new ClientsideDesk()
                     {
                         DeskName = desk.DeskName,
+                        IsEnabled = desk.IsEnabled,
                         Username = usernameProperty,
                         StartTime =
                             desk.Booking.StartTime.HasValue ?
@@ -223,7 +229,8 @@ public class LocationController : ControllerBase
                     {
                         LocationName = location.LocationName,
                         TotalDeskCount = location.Desks.Count,
-                        AvailableDeskCount = location.Desks.Where(x => x.Booking?.Username == null).Count()
+                        AvailableDeskCount =
+                            location.Desks.Where(x => x.Booking?.Username == null && x.IsEnabled).Count()
                     }
                 );
             }

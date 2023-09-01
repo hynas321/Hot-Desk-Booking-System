@@ -53,6 +53,9 @@ namespace dotnet_server.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("LocationName")
                         .HasColumnType("TEXT");
 

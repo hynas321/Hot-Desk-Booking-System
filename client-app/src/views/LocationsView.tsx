@@ -39,7 +39,7 @@ export default function LocationsView() {
 
       setTimeout(() => {
         setIsLocationListVisible(true);
-      }, 500);
+      }, 250);
     }
     
     fetchLocationsAsync();
@@ -57,7 +57,7 @@ export default function LocationsView() {
     try {
       const removeLocationStatusCode = await apiRequestHandler.removeLocation(token, locationName);
 
-      if (removeLocationStatusCode != 200) {
+      if (removeLocationStatusCode !== 200) {
         alertManager.displayAlert(`Could not remove the location ${locationName}`, "danger");
         return;
       }
@@ -75,7 +75,7 @@ export default function LocationsView() {
       const addLocationStatusCode = await apiRequestHandler.addLocation(token, locationName);
       setIsLocationPopupVisible(false);
 
-      if (addLocationStatusCode != 201) {
+      if (addLocationStatusCode !== 201) {
         alertManager.displayAlert(`Could not add the location: ${locationName}`, "danger");
         return;
       }

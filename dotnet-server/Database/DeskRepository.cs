@@ -22,6 +22,7 @@ public class DeskRepository
             Desk desk = new Desk()
             {
                 DeskName = deskInformation.DeskName,
+                IsEnabled = true,
                 Booking = new Booking()
                 {
                     Username = null,
@@ -62,6 +63,41 @@ public class DeskRepository
         }
 
         return false;
+    }
+
+    public ClientsideDesk? SetDeskAvailability(DeskInformation deskInformation, bool isEnabled)
+    {
+        if (dbContext.Desks == null)
+        {
+            throw new NullReferenceException();
+        }
+
+        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
+
+        if (location != null)
+        {
+            Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
+
+            if (desk != null && desk?.Booking?.Username == null)
+            {   
+                desk.IsEnabled = isEnabled;
+                dbContext?.Desks.Update(desk);
+                dbContext?.SaveChanges();
+
+                ClientsideDesk clientsideDesk = new ClientsideDesk()
+                {
+                    DeskName = desk.DeskName,
+                    IsEnabled = desk.IsEnabled,
+                    Username = null,
+                    StartTime = null,
+                    EndTime = null
+                };
+
+                return clientsideDesk;
+            }
+        }
+
+        return null;
     }
 
     public bool CheckIfDeskExists(DeskInformation deskInfo)

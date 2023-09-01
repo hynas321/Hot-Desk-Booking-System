@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace dotnet_server.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20230831174113_MyMigration")]
+    [Migration("20230901002544_MyMigration")]
     partial class MyMigration
     {
         /// <inheritdoc />
@@ -55,6 +55,9 @@ namespace dotnet_server.Migrations
                     b.Property<string>("DeskName")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("LocationName")
                         .HasColumnType("TEXT");
