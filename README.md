@@ -20,9 +20,11 @@ Testing: `XUnit`
 
 ## Configuration commands
 
-Frontend (client-app): `npm run build` `npm run start` \
-Backend server (dotnet-server): `dotnet build` `dotnet run` \
-Testing project (dotnet-server.Tests): `dotnet build` `dotnet test`
+Frontend (client-app): `npm install` `npm run start` \
+Backend server (dotnet-server): `dotnet run` \
+Testing project (dotnet-server.Tests): `dotnet test`
+
+If commands are not recognized, it is recommended to run the VS Code (or the terminal) with an option "Run as administrator" on Windows.
 
 ## Role: Administrator
 Administrators are able to:
