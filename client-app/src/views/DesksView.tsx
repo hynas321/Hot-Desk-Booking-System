@@ -15,7 +15,6 @@ import { updatedBookedDesk, updatedBookedDeskLocation } from '../components/redu
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
-  const [refreshComponent, setRefreshComponent] = useState<boolean>(false);
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [isDeskListVisible, setIsDeskListVisible] = useState<boolean>(false);
   const [bookingDays, setBookingDays] = useState<number>(1);
@@ -37,7 +36,6 @@ export default function DesksView() {
     const fetchDesksAsync = async () => {
       const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(token, locationName);
 
-      console.log(fetchedDesks);
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
         navigate(config.locationsViewClientEndpoint);
@@ -48,7 +46,7 @@ export default function DesksView() {
 
       setTimeout(() => {
         setIsDeskListVisible(true);
-      }, 500);
+      }, 250);
     }
     
     fetchDesksAsync();
@@ -62,18 +60,18 @@ export default function DesksView() {
     const bookedDesk: Desk = await apiRequestHandler.bookDesk(token, deskName, locationName, bookingDays);
 
     if (bookedDesk.deskName === undefined || !bookedDesk) {
-      alertManager.displayAlert(`Could not book the desk: ${deskName}. Make sure you have no pending booking`, "danger");
+      alertManager.displayAlert(`Could not book the desk: ${deskName}`, "danger");
       return;
     }
-
+    console.log(bookedDesk);
     const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
 
     const updatedDesks = [...desks];
     updatedDesks[deskIndex] = bookedDesk;
 
-    setDesks(updatedDesks);
     dispatch(updatedBookedDesk(bookedDesk));
     dispatch(updatedBookedDeskLocation(locationName));
+    setDesks(updatedDesks);
   }
 
   const handleUnbookButtonClick = async (deskName: string) => {
@@ -89,9 +87,9 @@ export default function DesksView() {
     const updatedDesks = [...desks];
     updatedDesks[deskIndex] = unbookedDesk;
 
-    setDesks(updatedDesks);
     dispatch(updatedBookedDesk(null));
     dispatch(updatedBookedDeskLocation(locationName));
+    setDesks(updatedDesks);
   }
 
   const handleRemoveButtonClick = async (deskName: string) => {
@@ -111,6 +109,46 @@ export default function DesksView() {
     }
   }
 
+  const handleEnableButtonClick = async (deskName: string) => {
+    try {
+      const returnedDesk: Desk = await apiRequestHandler.setDeskAvailability(token, deskName, locationName, true);
+
+      if (returnedDesk.deskName === undefined || !returnedDesk) {
+        alertManager.displayAlert(`Could not enable the desk: ${deskName}`, "danger");
+        return;
+      }
+
+      const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
+
+      const updatedDesks = [...desks];
+      updatedDesks[deskIndex] = returnedDesk;
+      setDesks(updatedDesks);
+
+    } catch (error) {
+      alertManager.displayAlert(`Unexpected error`, "danger");
+    }
+  }
+
+  const handleDisableButtonClick = async (deskName: string) => {
+    try {
+      const returnedDesk: Desk = await apiRequestHandler.setDeskAvailability(token, deskName, locationName, false);
+
+      if (returnedDesk.deskName === undefined || !returnedDesk) {
+        alertManager.displayAlert(`Could not disable the desk: ${deskName}`, "danger");
+        return;
+      }
+
+      const deskIndex = desks.findIndex(desk => desk.deskName === deskName);
+
+      const updatedDesks = [...desks];
+      updatedDesks[deskIndex] = returnedDesk;
+      setDesks(updatedDesks);
+
+    } catch (error) {
+      alertManager.displayAlert(`Unexpected error`, "danger");
+    }
+  }
+
   const handlePopupSubmit = async (deskName: string) => {
     try {
       const addDeskStatusCode = await apiRequestHandler.addDesk(token, deskName, locationName);
@@ -123,6 +161,7 @@ export default function DesksView() {
 
       const newDesk: Desk = {
         deskName: deskName,
+        isEnabled: true,
         username: null,
         startTime: null,
         endTime: null
@@ -178,6 +217,8 @@ export default function DesksView() {
             onBookClick={handleBookButtonClick}
             onUnbookClick={handleUnbookButtonClick}
             onRemoveClick={handleRemoveButtonClick}
+            onEnableClick={handleEnableButtonClick}
+            onDisableClick={handleDisableButtonClick}
             onRangeChange={handleDaysRangeChange}
           />
         </>

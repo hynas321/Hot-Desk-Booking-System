@@ -31,7 +31,7 @@ public class BookingRepository
             List<Desk> desks = deskRepository.GetAllDesks();
             bool existingAnyUserBookings = desks.Any(d => d.Booking?.Username == username);
 
-            if (desk != null && desk?.Booking?.Username == null && !existingAnyUserBookings)
+            if (desk != null && desk?.Booking?.Username == null && !existingAnyUserBookings && desk.IsEnabled)
             {
                 DateTime utcNow = DateTime.UtcNow;
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
@@ -50,6 +50,7 @@ public class BookingRepository
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {
                     DeskName = desk.DeskName,
+                    IsEnabled = desk.IsEnabled,
                     Username = desk.Booking.Username,
                     StartTime = bookingStartTimeString,
                     EndTime = bookingEndTimeString
@@ -88,8 +89,15 @@ public class BookingRepository
                 {
                     DeskName = desk.DeskName,
                     Username = null,
-                    StartTime = null,
-                    EndTime = null
+                    IsEnabled = desk.IsEnabled,
+                    StartTime =
+                        desk.Booking.StartTime.HasValue ?
+                        desk.Booking.StartTime.Value.ToString("dd-MM-yyyy")
+                        : null,
+                    EndTime =
+                        desk.Booking.EndTime.HasValue ?
+                        desk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
+                        : null
                 };
 
                 return clientsideDesk;

@@ -34,3 +34,13 @@ export interface UserInfoOutput {
 export interface TokenOutput {
   token: string;
 }
+
+export interface DeskAvailabilityInformation {
+  deskName: string;
+  locationName: string;
+  isEnabled: boolean
+}
+
+export interface DeskIsEnabled {
+  isEnabled: boolean;
+}

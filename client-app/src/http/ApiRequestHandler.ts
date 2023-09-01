@@ -1,7 +1,7 @@
 import config from './../config.json';
 import ApiEndpoints from './ApiEndpoints';
 import ApiHeaders from './ApiHeaders';
-import { BookingInformation, DeskInformation, LocationName, TokenOutput, UserCredentials, UserInfoOutput } from './ApiInterfaces';
+import { BookingInformation, DeskAvailabilityInformation, DeskInformation, LocationName, TokenOutput, UserCredentials, UserInfoOutput } from './ApiInterfaces';
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
@@ -275,7 +275,35 @@ class HttpRequestHandler {
         throw new Error("Error");
       } 
 
-      return await response.json();
+      return await response.json() as Desk;
+    }
+    catch (error) {
+      return error;
+    }
+  }
+
+  async setDeskAvailability(token: string, deskName: string, locationName: string, isEnabled: boolean): Promise<any> {
+    const requestBody: DeskAvailabilityInformation = {
+      deskName: deskName,
+      locationName: locationName,
+      isEnabled: isEnabled
+    }
+
+    try {
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.setDeskAvailability}`, {
+        method: 'PUT',
+        body: JSON.stringify(requestBody),
+        headers: {
+          'Content-Type': 'application/json',
+          [ApiHeaders.token]: token
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Error");
+      } 
+
+      return await response.json() as Desk;
     }
     catch (error) {
       return error;

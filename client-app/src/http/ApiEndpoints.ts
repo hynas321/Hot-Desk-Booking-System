@@ -13,6 +13,7 @@ class ApiEndpoints {
   //DeskController
   static addDesk: string = "/api/Desk/Add";
   static removeDesk: string = "/api/Desk/Remove";
+  static setDeskAvailability: string = "/api/Desk/SetDeskAvailability";
 
   //BookingController
   static bookDesk: string = "/api/Booking/Book";

@@ -352,6 +352,7 @@ public class UserController : ControllerBase
                 clientsideDesk = new ClientsideDesk()
                 {
                     DeskName = bookedDesk.DeskName,
+                    IsEnabled = bookedDesk.IsEnabled,
                     Username = username,
                     StartTime = bookedDesk.Booking.StartTime.Value.ToString("dd-MM-yyyy"),
                     EndTime = bookedDesk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
