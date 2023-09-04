@@ -9,10 +9,12 @@ Sample credentials to log in and test the program:
 - Admin admin1 (Admin)
 
 **IMPORTANT!**\
-Requirement "allow to change desk, but not later than the 24h before reservation" is not met. Unfortunately, I do not have more time to continue with the project in the upcoming days (starting from Friday). Nevertheless, I hope you find the project satisfactory :).
+Bookings are made immediately after choosing a desk. Thus, there is no way to book in advance. This solution has been implemented due to time restrictions as I no longer have time to continue with the project (due to other duties) and I do not want to cause any unnecessary delays. As a result, the unbook option is available at all times for convenience. I hope that this small issue will be compensated by the general quality and scale of the project. :)
+
+The project has been made in approximately 4 days.
 
 ## Technological overview
-**Frontend**: `React` `Typescript` `Redux` \
+**Frontend**: `React` `Typescript` `Redux` `Bootstrap` \
 **Backend**: `ASP.NET Core` `SQLite` `Entity Framework Core`
 
 Used code editor: `Visual Studio Code`\
@@ -36,6 +38,7 @@ Administrators are able to:
 - **enable a desk**,
 - **book a desk** - if available,
 - **unbook a desk** - if its their own.
+
 These are the things that Administrators can accomplish directly on the website via UI. However, there are more functionalities available for them only through **endpoints** (which are described in more detail later). They can, as well, among others:
 
 - add a user,
@@ -55,6 +58,7 @@ Booking rules:
 - only one booking at the time,
 - the maximum timespan is 7 days,
 - booking starts immediately and lasts until the end of the day.
+- expired bookings are erased automatically after midnight
 
 ## Endpoints
 
@@ -63,6 +67,8 @@ Endpoints can be accessed easily via Postman or **Swagger**. Swagger is extremel
 Endpoints usually cannot be accessed without a **validation token**. There are two types of tokens:
 - token - user's token,
 - global admin token - available in the `appsettings.json` file on the server-side (of course).
+
+Global admin token is a convenient tool when one needs to, for example, add a new user or alter someone's admin status.
 
 ## User interface - screenshots
 - Main view
