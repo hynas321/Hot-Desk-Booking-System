@@ -7,6 +7,7 @@ public class DailyTaskService : IHostedService, IDisposable
     #nullable disable warnings
     private readonly ILogger<DailyTaskService> logger;
     private readonly IServiceScopeFactory serviceScopeFactory;
+    private static bool activatedAfterServerStart = false;
     private Timer? timer;
 
     public DailyTaskService(
@@ -19,6 +20,12 @@ public class DailyTaskService : IHostedService, IDisposable
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        if (!activatedAfterServerStart)
+        {
+            DoWork(new object());
+            activatedAfterServerStart = true;
+        }
+
         DateTime utcNow = DateTime.UtcNow.AddDays(0);
         TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
         DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
@@ -41,6 +48,8 @@ public class DailyTaskService : IHostedService, IDisposable
             List<Desk> desks = deskRepository.GetAllDesks();
             logger.LogInformation("Checking for obsolete bookings...");
 
+            int obsoleteBookingsCount = 0;
+
             for (int i = 0; i < desks.Count; i++)
             {
                 DateTime? bookingEnd = desks[i].Booking?.EndTime;
@@ -51,21 +60,22 @@ public class DailyTaskService : IHostedService, IDisposable
 
                 if (bookingEnd.HasValue)
                 {
-                    TimeSpan difference = localTime - bookingEnd.Value;
+                    int difference = localTime.Day - bookingEnd.Value.Day;
 
-                    if (difference.Days >= 1)
+                    if (difference >= 1)
                     {
                         desks[i].Booking.Username = null;
                         desks[i].IsEnabled = true;
                         desks[i].Booking.StartTime = null;
                         desks[i].Booking.EndTime = null;
                         dbContext.Update(desks[i]);
+                        obsoleteBookingsCount++;
                     }
                 }
             }
 
             dbContext.SaveChanges();
-            logger.LogInformation("Procedure complete");
+            logger.LogInformation($"Found {obsoleteBookingsCount} obsolete bookings");
         }
     }
 
