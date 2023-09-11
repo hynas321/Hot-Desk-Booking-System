@@ -8,11 +8,6 @@ Sample credentials to log in and test the program:
 - User2 password2 (Employee)
 - Admin admin1 (Admin)
 
-**IMPORTANT!**\
-Bookings are made immediately after choosing a desk. Thus, there is no way to book in advance. This solution has been implemented due to time restrictions as I no longer have time to continue with the project (due to other duties) and I do not want to cause any unnecessary delays. As a result, the unbook option is available at all times for convenience. I hope that this small issue will be compensated by the general quality and scale of the project. :)
-
-The project has been made in approximately 4 days.
-
 ## Technological overview
 **Frontend**: `React` `Typescript` `Redux` `Bootstrap` \
 **Backend**: `ASP.NET Core` `SQLite` `Entity Framework Core`
