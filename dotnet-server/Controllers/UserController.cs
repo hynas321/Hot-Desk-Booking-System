@@ -16,6 +16,7 @@ public class UserController : ControllerBase
     private readonly UserRepository userRepository;
     private readonly DeskRepository deskRepository;
     private readonly SessionTokenManager tokenManager;
+    private readonly HashManager hashManager;
 
     #nullable disable
     public UserController(
@@ -23,7 +24,8 @@ public class UserController : ControllerBase
         IConfiguration configuration,
         UserRepository userRepository,
         DeskRepository deskRepository,
-        SessionTokenManager tokenManager
+        SessionTokenManager tokenManager,
+        HashManager hashManager
     )
     {
         this.logger = logger;
@@ -31,6 +33,7 @@ public class UserController : ControllerBase
         this.userRepository = userRepository;
         this.deskRepository = deskRepository;
         this.tokenManager = tokenManager;
+        this.hashManager = hashManager;
     }
     #nullable enable
 
@@ -72,7 +75,13 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
-            userRepository.AddUser(userCredentials);
+            UserCredentials hashedUserCredentials = new UserCredentials()
+            {
+                Username = userCredentials.Username,
+                Password = hashManager.HashPassword(userCredentials.Password)
+            };
+
+            userRepository.AddUser(hashedUserCredentials);
 
             logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
@@ -246,7 +255,9 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            if (userCredentials.Password != user.Password)
+            bool isPasswordCorrect = hashManager.VerifyPassword(userCredentials.Password, user.Password);
+
+            if (!isPasswordCorrect)
             {
                 logger.LogError("LogIn: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
