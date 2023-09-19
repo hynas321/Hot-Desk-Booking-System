@@ -25,6 +25,7 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddScoped<SessionTokenManager>();
+builder.Services.AddScoped<HashManager>();
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<LocationRepository>();
 builder.Services.AddScoped<DeskRepository>();

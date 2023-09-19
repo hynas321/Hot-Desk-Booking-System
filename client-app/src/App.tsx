@@ -18,7 +18,7 @@ function App() {
       element: <LocationsView />
     },
     {
-      path: `${config.desksViewClientEndpoint}`,
+      path: config.desksViewClientEndpoint,
       element: <DesksView />,
     },
     {
