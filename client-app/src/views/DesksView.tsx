@@ -18,7 +18,7 @@ export default function DesksView() {
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [isDeskListVisible, setIsDeskListVisible] = useState<boolean>(false);
   const [bookingDays, setBookingDays] = useState<number>(1);
-  const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const [token] = useLocalStorageState("token", { defaultValue: ""});
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +28,7 @@ export default function DesksView() {
   const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
   const alertManager: AlertManager = new AlertManager();
 
+  // eslint-disable-next-line
   useEffect(() => {
     if (locationName === undefined) {
       navigate(config.locationsViewClientEndpoint);
@@ -96,7 +97,7 @@ export default function DesksView() {
     try {
       const removeDeskStatusCode = await apiRequestHandler.removeDesk(token, deskName, locationName);
 
-      if (removeDeskStatusCode != 200) {
+      if (removeDeskStatusCode !== 200) {
         alertManager.displayAlert(`Could not remove the desk: ${deskName}`, "danger");
         return;
       }
@@ -154,7 +155,7 @@ export default function DesksView() {
       const addDeskStatusCode = await apiRequestHandler.addDesk(token, deskName, locationName);
       setIsPopupVisible(false);
 
-      if (addDeskStatusCode != 201) {
+      if (addDeskStatusCode !== 201) {
         alertManager.displayAlert(`Could not add the desk: ${deskName}`, "danger");
         return;
       }
@@ -182,7 +183,7 @@ export default function DesksView() {
   }
 
   return (
-    <div className="mb-5">
+    <div className="container col-lg-6 col-md-10 col-12 mb-5">
       <TopBar isUserInfoVisible={true} />
       <h4>{"Desks in location: "}<b>{`${locationName}`}</b></h4>
       <Popup 

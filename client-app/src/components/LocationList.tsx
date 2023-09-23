@@ -22,7 +22,7 @@ export default function LocationList({locations, onChooseClick, onRemoveClick}: 
               <div><b>{`${location.locationName}`}</b></div>
               <div className="mb-2">{`Total desks: ${location.totalDeskCount}, available: ${location.availableDeskCount}`}</div>
               <Button
-                text="Enter this location"
+                text="Enter location"
                 active={true}
                 spacing={0}
                 type="primary"
