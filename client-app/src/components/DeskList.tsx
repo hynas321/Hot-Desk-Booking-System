@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Desk } from '../types/Desk'
 import Button from './Button'
 import Range from './Range'
@@ -16,7 +16,23 @@ interface DeskListProps {
 
 export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveClick, onEnableClick, onDisableClick, onRangeChange}: DeskListProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isHoverSupported, setIsHoverSupported] = useState(false);
   const user = useAppSelector((state) => state.user);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(hover: hover)');
+    
+    const handleHoverChange = (event: any) => {
+      setIsHoverSupported(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handleHoverChange);
+    setIsHoverSupported(mediaQuery.matches);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleHoverChange);
+    };
+  }, []);
 
   return (
     <>
@@ -110,8 +126,9 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                   }
                 </div>
               { 
-                (desk.username === null && hoveredIndex === index && desk.isEnabled) && (
-                  <div className="mt-3 mb-1">
+                (desk.username === null && desk.isEnabled &&
+                  (isHoverSupported ? (hoveredIndex === index && user.bookedDesk === null) : user.bookedDesk === null)) && (
+                  <div className={`mt-4 mb-1"}`}>
                     <Range
                       title={`Book ${desk.deskName} for`}
                       suffix={"day(s)"}
