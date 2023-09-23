@@ -9,22 +9,20 @@ import ApiRequestHandler from '../http/ApiRequestHandler';
 import useLocalStorageState from 'use-local-storage-state';
 import TopBar from '../components/TopBar';
 import { useAppSelector } from '../components/redux/hooks';
-import { useDispatch } from 'react-redux';
-import { updatedIsAdmin } from '../components/redux/slices/user-slice';
 import { AlertManager } from '../managers/AlertManager';
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isAddLocationPopupVisible, setIsLocationPopupVisible] = useState<boolean>(false);
   const [isLocationListVisible, setIsLocationListVisible] = useState<boolean>(false);
-  const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const [token] = useLocalStorageState("token", { defaultValue: ""});
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const user = useAppSelector((state) => state.user);
 
   const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
   const alertManager: AlertManager = new AlertManager();
 
+  // eslint-disable-next-line
   useEffect(() => {
     const fetchLocationsAsync = async () => {
       const fetchedLocations = await apiRequestHandler.getAllLocationNames();
@@ -93,7 +91,7 @@ export default function LocationsView() {
   }
 
   return (
-    <div className="mb-5">
+    <div className="container col-lg-6 col-md-8 col-12 mb-5">
       <TopBar isUserInfoVisible={true} />
       <h4>Locations</h4>
       <Popup 

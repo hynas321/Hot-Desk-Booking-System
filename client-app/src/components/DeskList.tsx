@@ -44,7 +44,11 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                   (desk.username === null && !desk.isEnabled) && <>{"Disabled"}</>
                 }
                 {
-                  (desk.username !== null) && <>{`Booked from ${desk.startTime}`}<br/>{`Booked until the end of ${desk.endTime}`}</>
+                  (desk.username !== null) && 
+                  <>
+                    <span className='d-lg-none d-md-none d-sm-block d-xs-block'>{"Booked from\u00A0"} <b>{desk.startTime}</b> <br/>{"until the end of\u00A0"} <b>{desk.endTime}</b></span>
+                    <span className='d-lg-block d-md-block d-none'>{"Booked from\u00A0"} <b>{desk.startTime}</b> {"\u00A0until the end of\u00A0"} <b>{desk.endTime}</b></span>
+                  </>
                 }
               </div>
                 <div className="text-primary mb-2">
@@ -52,7 +56,7 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                     (desk.username === user.username) && "Your booking"
                   }
                   {
-                    (user.isAdmin && desk.username !== null && desk.username != user.username) && `Booked by ${desk.username}`
+                    (user.isAdmin && desk.username !== null && desk.username !== user.username) && `Booked by ${desk.username}`
                   }
                 </div>
                 <div className="d-flex">
@@ -74,22 +78,12 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                       onClick={() => onBookClick(desk.deskName)}
                     />
                   }
-                  {
-                    (user.isAdmin) &&
-                    <Button
-                      text="Remove"
-                      active={desk.username === null}
-                      spacing={2}
-                      type="danger"
-                      onClick={() => onRemoveClick(desk.deskName)}
-                    />
-                  }
-                  {
+                                    {
                     (user.isAdmin && desk.isEnabled) &&
                     <Button
                       text="Disable"
                       active={desk.username === null}
-                      spacing={0}
+                      spacing={2}
                       type="secondary"
                       onClick={() => onDisableClick(desk.deskName)}
                     />
@@ -99,25 +93,37 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                     <Button
                       text="Enable"
                       active={desk.username === null}
-                      spacing={0}
+                      spacing={2}
                       type="secondary"
                       onClick={() => onEnableClick(desk.deskName)}
                     />
                   }
-                  { 
-                    (desk.username === null && hoveredIndex === index && desk.isEnabled) && (
-                      <Range
-                        title={"Booking timespan"}
-                        suffix={"days"}
-                        minValue={1}
-                        maxValue={7}
-                        step={1}
-                        defaultValue={1}
-                        onChange={onRangeChange}
-                      />
-                    )
+                  {
+                    (user.isAdmin) &&
+                    <Button
+                      text="Remove"
+                      active={desk.username === null}
+                      spacing={0}
+                      type="danger"
+                      onClick={() => onRemoveClick(desk.deskName)}
+                    />
                   }
-              </div>  
+                </div>
+              { 
+                (desk.username === null && hoveredIndex === index && desk.isEnabled) && (
+                  <div className="mt-3 mb-1">
+                    <Range
+                      title={`Book ${desk.deskName} for`}
+                      suffix={"day(s)"}
+                      minValue={1}
+                      maxValue={7}
+                      step={1}
+                      defaultValue={1}
+                      onChange={onRangeChange}
+                    />
+                  </div>
+                )
+              }
             </li>
           )) 
           : <h5 className="text-danger">{"Nothing to display :("}</h5>

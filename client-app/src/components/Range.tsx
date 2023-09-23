@@ -23,10 +23,10 @@ function Range({title, suffix, minValue, maxValue, step, defaultValue, onChange}
   
   return (
     <div className="d-flex align-items-center">
-      <label className="form-label mx-2">{`${title}: ${value} ${suffix}`}</label>
+      <label className="form-label">{`${title}: ${value} ${suffix}`}</label>
       <div className="flex-grow-1">
         <input 
-            className="form-range"
+            className="form-range mx-2"
             type="range"
             value={value}
             min={minValue}

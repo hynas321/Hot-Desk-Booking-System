@@ -28,11 +28,9 @@ function App() {
 ]);
 
 return (
-    <div className="container col-6">
-      <Provider store={store}>
-        <RouterProvider router={router}/>
-      </Provider>
-    </div>
+    <Provider store={store}>
+      <RouterProvider router={router}/>
+    </Provider>
   )
 }
 

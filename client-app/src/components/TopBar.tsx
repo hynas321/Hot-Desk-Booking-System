@@ -16,13 +16,14 @@ interface TopBarProps {
 }
 
 export default function TopBar({isUserInfoVisible}: TopBarProps) {
-  const [token, setToken] = useLocalStorageState("token", { defaultValue: ""});
+  const [token] = useLocalStorageState("token", { defaultValue: ""});
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user)
 
   const apiRequestHandler = new ApiRequestHandler();
   
+  // eslint-disable-next-line
   useEffect(() => {
     if (!isUserInfoVisible && user.username === "User") {
       return;
@@ -90,11 +91,19 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
             <h5 className="text-secondary">
               {`${user.isAdmin ? "Administrator" : "Employee"}:`} <b className="text-secondary">{user.username}</b>
             </h5>
-            <h6 className={`${user.bookedDesk === null ? "text-danger" : "text-primary"}`}>
-              {`Current booking: ${user.bookedDesk === null ?
-                "None" :
-                `${user.bookedDesk.deskName} in ${user.bookedDeskLocation} until ${user.bookedDesk.endTime}`}`}
-            </h6>
+              {
+                user.bookedDesk && 
+                (
+                  <h6>
+                    <span className="d-block text-primary mb-1">
+                      {"Current booking"}
+                    </span>
+                    <span className="d-block text-primary">
+                      {`${user.bookedDesk.deskName} in ${user.bookedDeskLocation} until ${user.bookedDesk.endTime}`}
+                    </span>
+                  </h6>
+                )
+              }
           </div>
             ) 
           }
