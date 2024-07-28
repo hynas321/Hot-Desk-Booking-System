@@ -1,4 +1,4 @@
-using Dotnet.Server.Database;
+using Dotnet.Server.Repositories;
 
 namespace Dotnet.Server.Services;
 
@@ -26,7 +26,7 @@ public class DailyTaskService : IHostedService, IDisposable
             activatedAfterServerStart = true;
         }
 
-        DateTime utcNow = DateTime.UtcNow.AddDays(0);
+        DateTime utcNow = DateTime.UtcNow;
         TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
         DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
         DateTime nextRun = utcNow.Date.AddDays(1);
@@ -43,7 +43,7 @@ public class DailyTaskService : IHostedService, IDisposable
         {
             var serviceProvider = scope.ServiceProvider;
             var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            var deskRepository = scope.ServiceProvider.GetRequiredService<DeskRepository>();
+            var deskRepository = scope.ServiceProvider.GetRequiredService<IDeskRepository>();
 
             List<Desk> desks = deskRepository.GetAllDesks();
             logger.LogInformation("Checking for obsolete bookings...");

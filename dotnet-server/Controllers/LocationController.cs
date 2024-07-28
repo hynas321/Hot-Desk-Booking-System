@@ -1,5 +1,5 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
+using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -13,16 +13,16 @@ public class LocationController : ControllerBase
 {
     private readonly ILogger<LocationController> logger;
     private readonly IConfiguration configuration;
-    private readonly UserRepository userRepository;
-    private readonly LocationRepository locationRepository;
-    private readonly SessionTokenManager tokenManager;
+    private readonly IUserRepository userRepository;
+    private readonly ILocationRepository locationRepository;
+    private readonly ISessionTokenManager tokenManager;
 
     public LocationController(
         ILogger<LocationController> logger,
         IConfiguration configuration,
-        UserRepository userRepository,
-        LocationRepository locationRepository,
-        SessionTokenManager tokenManager
+        IUserRepository userRepository,
+        ILocationRepository locationRepository,
+        ISessionTokenManager tokenManager
     )
     {
         this.logger = logger;
@@ -33,7 +33,7 @@ public class LocationController : ControllerBase
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] LocationName locationName)
+    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] LocationName locationName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -53,7 +53,7 @@ public class LocationController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -62,15 +62,21 @@ public class LocationController : ControllerBase
                 }
             }
 
-            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
+            Location? location = await locationRepository.GetLocationAsync(locationName.Name, cancellationToken);
 
-            if (locationExists)
+            if (location != null)
             {
                 logger.LogInformation("Add: Status 409, Conflict");
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
-            locationRepository.AddLocation(locationName.Name);
+            location = new Location()
+            {
+                LocationName = locationName.Name,
+                Desks = new List<Desk>()
+            };
+
+            await locationRepository.AddLocationAsync(location, cancellationToken);
 
             logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
@@ -83,7 +89,7 @@ public class LocationController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] LocationName locationName)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] LocationName locationName, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -103,7 +109,7 @@ public class LocationController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -112,15 +118,15 @@ public class LocationController : ControllerBase
                 }
             }
 
-            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
+            Location? location = await locationRepository.GetLocationAsync(locationName.Name, cancellationToken);
 
-            if (!locationExists)
+            if (location == null)
             {
                 logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isLocationRemoved = locationRepository.RemoveLocation(locationName.Name);
+            bool isLocationRemoved = await locationRepository.RemoveLocationAsync(locationName.Name, cancellationToken);
 
             if (!isLocationRemoved)
             {
@@ -139,11 +145,11 @@ public class LocationController : ControllerBase
     }
 
     [HttpGet("GetDesks/{locationName}")]
-    public IActionResult GetDesks([FromHeader] string token, [FromRoute] string locationName)
+    public async Task<IActionResult> GetDesks([FromHeader] string token, [FromRoute] string locationName, CancellationToken cancellationToken = default)
     {
         try
         {
-            Location? location = locationRepository.GetLocation(locationName);
+            Location? location = await locationRepository.GetLocationAsync(locationName, cancellationToken);
             List<ClientsideDesk> clientsideDesks = new List<ClientsideDesk>();
             string? username = null;
             User? user = null;
@@ -158,7 +164,7 @@ public class LocationController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                user = userRepository.GetUser(username);
+                user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null)
                 {
@@ -215,11 +221,11 @@ public class LocationController : ControllerBase
     }
 
     [HttpGet("GetAllNames")]
-    public async Task<IActionResult> GetAllNames()
+    public async Task<IActionResult> GetAllNames(CancellationToken cancellationToken = default)
     {
         try
         {
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
+            List<Location> locations = await locationRepository.GetAllLocationsAsync(cancellationToken);
             List<ClientsideLocation> clientsideLocations = new List<ClientsideLocation>();
             
             foreach(var location in locations)
@@ -247,7 +253,7 @@ public class LocationController : ControllerBase
     }
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -257,7 +263,7 @@ public class LocationController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
+            List<Location> locations = await locationRepository.GetAllLocationsAsync(cancellationToken);
 
             logger.LogInformation("GetAll: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(locations));

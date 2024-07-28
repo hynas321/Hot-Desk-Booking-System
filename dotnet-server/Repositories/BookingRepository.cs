@@ -1,34 +1,28 @@
 using Dotnet.Server.Http;
-using Microsoft.EntityFrameworkCore;
 
-namespace Dotnet.Server.Database;
+namespace Dotnet.Server.Repositories;
 
-public class BookingRepository
+public class BookingRepository : IBookingRepository
 {
     #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
-    private readonly DeskRepository deskRepository;
+    private readonly IDeskRepository deskRepository;
 
-    public BookingRepository(ApplicationDbContext dbContext, DeskRepository deskRepository)
+    public BookingRepository(ApplicationDbContext dbContext, IDeskRepository deskRepository)
     {
         this.dbContext = dbContext;
         this.deskRepository = deskRepository;
     }
 
-    public ClientsideDesk? BookDesk(string username, BookingInformation bookingInformation)
+    public async Task<ClientsideDesk?> BookDeskAsync(string username, BookingInformation bookingInformation, CancellationToken cancellationToken)
     {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
         Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == bookingInformation.LocationName);
 
         if (location != null)
         {
             Desk? desk = location.Desks.FirstOrDefault(d => d.DeskName == bookingInformation.DeskName);
 
-            List<Desk> desks = deskRepository.GetAllDesks();
+            List<Desk> desks = await deskRepository.GetAllDesksAsync(cancellationToken);
             bool existingAnyUserBookings = desks.Any(d => d.Booking?.Username == username);
 
             if (desk != null && desk?.Booking?.Username == null && !existingAnyUserBookings && desk.IsEnabled)
@@ -42,7 +36,7 @@ public class BookingRepository
                 desk.Booking.EndTime = localTime.AddDays(bookingInformation.Days - 1);
 
                 dbContext?.Desks.Update(desk);
-                dbContext?.SaveChanges();
+                await dbContext?.SaveChangesAsync(cancellationToken);
 
                 string bookingStartTimeString = desk.Booking.StartTime.Value.ToString("dd-MM-yyyy");
                 string bookingEndTimeString = desk.Booking.EndTime.Value.ToString("dd-MM-yyyy");
@@ -63,13 +57,8 @@ public class BookingRepository
         return null;
     }
 
-    public ClientsideDesk? UnbookDesk(DeskInformation deskInformation)
+    public async Task<ClientsideDesk?> UnBookDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
         Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
 
         if (location != null)
@@ -83,7 +72,7 @@ public class BookingRepository
                 desk.Booking.EndTime = null;
 
                 dbContext?.Desks.Update(desk);
-                dbContext?.SaveChanges();
+                await dbContext?.SaveChangesAsync(cancellationToken);
 
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {
@@ -105,15 +94,5 @@ public class BookingRepository
         }
 
         return null;
-    }
-
-    public async Task<List<Location>> GetAllLocationsAsync()
-    {
-        if (dbContext.Locations == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        return await dbContext.Locations.ToListAsync();
     }
 }

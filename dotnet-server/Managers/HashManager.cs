@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 
 namespace Dotnet.Server.Managers;
 
-public class HashManager
+public class HashManager : IHashManager
 {
     public string HashPassword(string password)
     {

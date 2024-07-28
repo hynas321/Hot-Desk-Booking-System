@@ -1,5 +1,5 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
+using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
 using Microsoft.AspNetCore.Mvc;
@@ -13,16 +13,16 @@ public class DeskController : ControllerBase
 {
     private readonly ILogger<DeskController> logger;
     private readonly IConfiguration configuration;
-    private readonly UserRepository userRepository;
-    private readonly DeskRepository deskRepository;
-    private readonly SessionTokenManager tokenManager;
+    private readonly IUserRepository userRepository;
+    private readonly IDeskRepository deskRepository;
+    private readonly ISessionTokenManager tokenManager;
 
     public DeskController(
         ILogger<DeskController> logger,
         IConfiguration configuration,
-        UserRepository userRepository,
-        DeskRepository deskRepository,
-        SessionTokenManager tokenManager
+        IUserRepository userRepository,
+        IDeskRepository deskRepository,
+        ISessionTokenManager tokenManager
     )
     {
         this.logger = logger;
@@ -33,7 +33,7 @@ public class DeskController : ControllerBase
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] DeskInformation deskInfo)
+    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -53,7 +53,7 @@ public class DeskController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -62,15 +62,15 @@ public class DeskController : ControllerBase
                 }
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
+            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
 
-            if (deskExists)
+            if (desk == null)
             {
                 logger.LogInformation("Add: Status 409, Conflict");
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
-            bool deskAdded = deskRepository.AddDesk(deskInfo);
+            bool deskAdded = await deskRepository.AddDeskAsync(deskInfo, cancellationToken);
 
             if (!deskAdded)
             {
@@ -89,7 +89,7 @@ public class DeskController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] DeskInformation deskInfo)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -109,7 +109,7 @@ public class DeskController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -118,15 +118,15 @@ public class DeskController : ControllerBase
                 }
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
+            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
 
-            if (!deskExists)
+            if (desk == null)
             {
                 logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isDeskRemoved = deskRepository.RemoveDesk(deskInfo);
+            bool isDeskRemoved = await deskRepository.RemoveDeskAsync(deskInfo, cancellationToken);
 
             if (!isDeskRemoved)
             {
@@ -145,7 +145,7 @@ public class DeskController : ControllerBase
     }
 
     [HttpPut("SetDeskAvailability")]
-    public IActionResult SetDeskAvailability([FromHeader] string token, [FromBody] DeskAvailabilityInformation deskAvailabilityInfo)
+    public async Task<IActionResult> SetDeskAvailability([FromHeader] string token, [FromBody] DeskAvailabilityInformation deskAvailabilityInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -165,7 +165,7 @@ public class DeskController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -180,15 +180,15 @@ public class DeskController : ControllerBase
                 LocationName = deskAvailabilityInfo.LocationName
             };
 
-            bool deskExists = deskRepository.CheckIfDeskExists(info);
+            Desk desk = await deskRepository.GetDeskAsync(info, cancellationToken);
 
-            if (!deskExists)
+            if (desk == null)
             {
                 logger.LogInformation("SetDeskAvailability: Status 404 Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? clientSideDesk = deskRepository.SetDeskAvailability(info, deskAvailabilityInfo.IsEnabled);
+            ClientsideDesk? clientSideDesk = await deskRepository.SetDeskAvailabilityAsync(info, deskAvailabilityInfo.IsEnabled, cancellationToken);
 
             if (clientSideDesk == null)
             {

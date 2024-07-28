@@ -1,5 +1,5 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
+using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
@@ -11,15 +11,15 @@ namespace Dotnet.Server.Controllers;
 public class BookingController : ControllerBase
 {
     private readonly ILogger<BookingController> logger;
-    private readonly DeskRepository deskRepository;
-    private readonly BookingRepository bookingRepository;
-    private readonly SessionTokenManager tokenManager;
+    private readonly IDeskRepository deskRepository;
+    private readonly IBookingRepository bookingRepository;
+    private readonly ISessionTokenManager tokenManager;
 
     public BookingController(
         ILogger<BookingController> logger,
-        DeskRepository deskRepository,
-        BookingRepository bookingRepository,
-        SessionTokenManager tokenManager
+        IDeskRepository deskRepository,
+        IBookingRepository bookingRepository,
+        ISessionTokenManager tokenManager
     )
     {
         this.logger = logger;
@@ -29,7 +29,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPut("Book")]
-    public IActionResult Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo)
+    public async Task<IActionResult> Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -53,23 +53,23 @@ public class BookingController : ControllerBase
                 LocationName = bookingInfo.LocationName
             };
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
+            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
 
-            if (!deskExists)
+            if (desk == null)
             {
                 logger.LogInformation("Book: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? clientsideDesk = bookingRepository.BookDesk(username, bookingInfo);
+            ClientsideDesk? deskDTO = await bookingRepository.BookDeskAsync(username, bookingInfo, cancellationToken);
 
-            if (clientsideDesk == null)
+            if (deskDTO == null)
             {
                 logger.LogInformation("Book: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesk));
+            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(deskDTO));
         }
         catch (Exception ex)
         {
@@ -79,7 +79,7 @@ public class BookingController : ControllerBase
     }
 
     [HttpPut("Unbook")]
-    public IActionResult Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo)
+    public async Task<IActionResult> Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -97,15 +97,15 @@ public class BookingController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
+            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
 
-            if (!deskExists)
+            if (desk == null)
             {
                 logger.LogInformation("Unbook: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? clientsideDesk = bookingRepository.UnbookDesk(deskInfo);
+            ClientsideDesk? clientsideDesk = await bookingRepository.UnBookDeskAsync(deskInfo, cancellationToken);
 
             if (clientsideDesk == null)
             {

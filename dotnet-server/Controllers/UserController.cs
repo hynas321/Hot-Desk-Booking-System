@@ -1,5 +1,5 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
+using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
 using Dotnet.Server.Helpers;
@@ -13,19 +13,19 @@ public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> logger;
     private readonly IConfiguration configuration;
-    private readonly UserRepository userRepository;
-    private readonly DeskRepository deskRepository;
-    private readonly SessionTokenManager tokenManager;
-    private readonly HashManager hashManager;
+    private readonly IUserRepository userRepository;
+    private readonly IDeskRepository deskRepository;
+    private readonly ISessionTokenManager tokenManager;
+    private readonly IHashManager hashManager;
 
     #nullable disable
     public UserController(
         ILogger<UserController> logger,
         IConfiguration configuration,
-        UserRepository userRepository,
-        DeskRepository deskRepository,
-        SessionTokenManager tokenManager,
-        HashManager hashManager
+        IUserRepository userRepository,
+        IDeskRepository deskRepository,
+        ISessionTokenManager tokenManager,
+        IHashManager hashManager
     )
     {
         this.logger = logger;
@@ -38,7 +38,7 @@ public class UserController : ControllerBase
     #nullable enable
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -58,7 +58,7 @@ public class UserController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -67,21 +67,22 @@ public class UserController : ControllerBase
                 }
             }
 
-            bool userExists = userRepository.CheckIfUserExists(userCredentials.Username);
+            User? existingUser = await userRepository.GetUserAsync(userCredentials.Username, cancellationToken);
 
-            if (userExists)
+            if (existingUser == null)
             {
                 logger.LogInformation("Add: Status 409, Conflict");
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
-            UserCredentials hashedUserCredentials = new UserCredentials()
+            User newUser = new User()
             {
                 Username = userCredentials.Username,
-                Password = hashManager.HashPassword(userCredentials.Password)
+                Password = hashManager.HashPassword(userCredentials.Password),
+                IsAdmin = false
             };
 
-            userRepository.AddUser(hashedUserCredentials);
+            await userRepository.AddUserAsync(newUser, cancellationToken);
 
             logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
@@ -94,7 +95,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] UserUsername userToRemove)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] UserUsername userToRemove, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -113,7 +114,7 @@ public class UserController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -122,15 +123,15 @@ public class UserController : ControllerBase
                 }
             }
 
-            bool userExists = userRepository.CheckIfUserExists(userToRemove.Username);
+            User? existingUser = await userRepository.GetUserAsync(userToRemove.Username, cancellationToken);
 
-            if (!userExists)
+            if (existingUser == null)
             {
                 logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isUserRemoved = userRepository.RemoveUser(userToRemove.Username);
+            bool isUserRemoved = await userRepository.RemoveUserAsync(userToRemove.Username, cancellationToken);
 
             if (!isUserRemoved)
             {
@@ -149,7 +150,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetBooking")]
-    public IActionResult GetBookedDeskInfo([FromHeader] string token)
+    public async Task<IActionResult> GetBookedDeskInfo([FromHeader] string token, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -161,7 +162,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            User? user = userRepository.GetUser(username);
+            User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
@@ -169,7 +170,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            DeskInformation? bookingInfo = userRepository.GetBookedDeskInformation(username);
+            DeskInformation? bookingInfo = await userRepository.GetBookedDeskInformationAsync(username, cancellationToken);
 
             if (bookingInfo == null)
             {
@@ -189,7 +190,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -199,7 +200,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            List<User> users = await userRepository.GetAllUsersAsync();
+            List<User> users = await userRepository.GetAllUsersAsync(cancellationToken);
 
             logger.LogInformation("GetAll: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, users);
@@ -213,7 +214,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetAllSessions")]
-    public IActionResult GetAllSessions([FromHeader] string globalAdminToken)
+    public IActionResult GetAllSessions([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -237,7 +238,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPost("LogIn")]
-    public IActionResult LogIn([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> LogIn([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -247,7 +248,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            User? user = userRepository.GetUser(userCredentials.Username);
+            User? user = await userRepository.GetUserAsync(userCredentials.Username, cancellationToken);
 
             if (user == null)
             {
@@ -281,7 +282,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("LogOut")]
-    public IActionResult LogOut([FromHeader] string token)
+    public IActionResult LogOut([FromHeader] string token, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -304,7 +305,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("IsAdmin/{username}")]
-    public IActionResult IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username)
+    public async Task<IActionResult> IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -314,7 +315,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            User? user = userRepository.GetUser(username);
+            User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
@@ -333,7 +334,7 @@ public class UserController : ControllerBase
     }
 
     [HttpGet("GetUserInfo")]
-    public IActionResult GetUserInfo([FromHeader] string token)
+    public async Task<IActionResult> GetUserInfo([FromHeader] string token, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -345,7 +346,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            User? user = userRepository.GetUser(username);
+            User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
@@ -353,7 +354,7 @@ public class UserController : ControllerBase
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            List<Desk> desks = deskRepository.GetAllDesks();
+            List<Desk> desks = await deskRepository.GetAllDesksAsync(cancellationToken);
             Desk? bookedDesk = desks.FirstOrDefault(d => d.Booking?.Username == username);
             ClientsideDesk? clientsideDesk = null;
             
@@ -390,10 +391,7 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("SetAdmin")]
-    public IActionResult SetAdmin(
-        [FromHeader] string token,
-        [FromBody] UserAdminStatus userAdminStatus
-    )
+    public async Task<IActionResult> SetAdmin([FromHeader] string token, [FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -412,7 +410,7 @@ public class UserController : ControllerBase
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = userRepository.GetUser(username);
+                User? user = await userRepository.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
@@ -421,7 +419,7 @@ public class UserController : ControllerBase
                 }
             }
 
-            bool statusSet = userRepository.SetAdminStatus(userAdminStatus.Username, userAdminStatus.IsAdmin);
+            bool statusSet = await userRepository.SetAdminStatus(userAdminStatus.Username, userAdminStatus.IsAdmin, cancellationToken);
 
             if (!statusSet)
             {

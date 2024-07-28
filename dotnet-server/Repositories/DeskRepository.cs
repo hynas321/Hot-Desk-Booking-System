@@ -1,9 +1,10 @@
 using Dotnet.Server.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Threading;
 
-namespace Dotnet.Server.Database;
+namespace Dotnet.Server.Repositories;
 
-public class DeskRepository
+public class DeskRepository : IDeskRepository
 {
     #nullable disable warnings
     private readonly ApplicationDbContext dbContext;
@@ -13,9 +14,9 @@ public class DeskRepository
         this.dbContext = dbContext;
     }
 
-    public bool AddDesk(DeskInformation deskInformation)
+    public async Task<bool> AddDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {        
-        var location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
+        Location location = await dbContext?.Locations?.FirstOrDefaultAsync(l => l.LocationName == deskInformation.LocationName, cancellationToken);
 
         if (location != null)
         {
@@ -32,7 +33,7 @@ public class DeskRepository
             };
 
             location.Desks.Add(desk);
-            dbContext?.SaveChanges();
+            await dbContext?.SaveChangesAsync(cancellationToken);
 
             return true;
         }
@@ -40,14 +41,9 @@ public class DeskRepository
         return false;
     }
 
-    public bool RemoveDesk(DeskInformation deskInformation)
+    public async Task<bool> RemoveDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
+        Location? location = await dbContext?.Locations?.FirstOrDefaultAsync(l => l.LocationName == deskInformation.LocationName, cancellationToken);
 
         if (location != null)
         {
@@ -56,7 +52,7 @@ public class DeskRepository
             if (desk != null && desk?.Booking?.Username == null)
             {
                 dbContext?.Desks.Remove(desk);
-                dbContext?.SaveChanges();
+                await dbContext?.SaveChangesAsync(cancellationToken);
 
                 return true;
             }
@@ -65,14 +61,9 @@ public class DeskRepository
         return false;
     }
 
-    public ClientsideDesk? SetDeskAvailability(DeskInformation deskInformation, bool isEnabled)
+    public async Task<ClientsideDesk?> SetDeskAvailabilityAsync(DeskInformation deskInformation, bool isEnabled, CancellationToken cancellationToken)
     {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
-        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName == deskInformation.LocationName);
+        Location? location = await dbContext?.Locations?.FirstOrDefaultAsync(l => l.LocationName == deskInformation.LocationName, cancellationToken);
 
         if (location != null)
         {
@@ -82,7 +73,7 @@ public class DeskRepository
             {   
                 desk.IsEnabled = isEnabled;
                 dbContext?.Desks.Update(desk);
-                dbContext?.SaveChanges();
+                await dbContext?.SaveChangesAsync(cancellationToken);
 
                 ClientsideDesk clientsideDesk = new ClientsideDesk()
                 {
@@ -100,30 +91,25 @@ public class DeskRepository
         return null;
     }
 
-    public bool CheckIfDeskExists(DeskInformation deskInfo)
+    public async Task<Desk> GetDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {
-        if (dbContext.Desks == null)
+        Location? location = await dbContext?.Locations?.FirstOrDefaultAsync(l => l.LocationName == deskInformation.LocationName, cancellationToken);
+
+        if (location == null)
         {
-            throw new NullReferenceException();
+            return null;
         }
 
-        Location? location = dbContext?.Locations?.FirstOrDefault(l => l.LocationName ==deskInfo.LocationName);
+        return location.Desks.FirstOrDefault(d => d.DeskName == deskInformation.DeskName);
+    }
 
-        if (location != null)
-        {
-            return location.Desks.Any(d => d.DeskName == deskInfo.DeskName);
-        }
-
-        return false;
+    public async Task<List<Desk>> GetAllDesksAsync(CancellationToken cancellationToken)
+    {
+        return await dbContext.Desks.ToListAsync();
     }
 
     public List<Desk> GetAllDesks()
     {
-        if (dbContext.Desks == null)
-        {
-            throw new NullReferenceException();
-        }
-
         return dbContext.Desks.ToList();
     }
 }
