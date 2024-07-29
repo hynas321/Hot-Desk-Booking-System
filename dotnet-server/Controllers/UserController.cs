@@ -4,6 +4,7 @@ using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Dotnet.Server.Services;
 
 namespace Dotnet.Server.Controllers;
 
@@ -11,29 +12,29 @@ namespace Dotnet.Server.Controllers;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly ILogger<UserController> logger;
-    private readonly IConfiguration configuration;
-    private readonly IUserRepository userRepository;
-    private readonly IDeskRepository deskRepository;
-    private readonly ISessionTokenManager tokenManager;
-    private readonly IHashManager hashManager;
+    private readonly ILogger<UserController> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IUserService _userService;
+    private readonly IDeskService _deskService;
+    private readonly ISessionTokenManager _tokenManager;
+    private readonly IHashManager _hashManager;
 
     #nullable disable
     public UserController(
         ILogger<UserController> logger,
         IConfiguration configuration,
-        IUserRepository userRepository,
-        IDeskRepository deskRepository,
+        IUserService userService,
+        IDeskService deskService,
         ISessionTokenManager tokenManager,
         IHashManager hashManager
     )
     {
-        this.logger = logger;
-        this.configuration = configuration;
-        this.userRepository = userRepository;
-        this.deskRepository = deskRepository;
-        this.tokenManager = tokenManager;
-        this.hashManager = hashManager;
+        _logger = logger;
+        _configuration = configuration;
+        _userService = userService;
+        _deskService = deskService;
+        _tokenManager = tokenManager;
+        _hashManager = hashManager;
     }
     #nullable enable
 
@@ -44,52 +45,52 @@ public class UserController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Add: Status 400, Bad Request");
+                _logger.LogError("Add: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken])
+            if (token != _configuration[Config.GlobalAdminToken])
             {
-                string? username = tokenManager.GetUsername(token);
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
 
-            User? existingUser = await userRepository.GetUserAsync(userCredentials.Username, cancellationToken);
+            User? existingUser = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
 
             if (existingUser == null)
             {
-                logger.LogInformation("Add: Status 409, Conflict");
+                _logger.LogInformation("Add: Status 409, Conflict");
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
             User newUser = new User()
             {
-                Username = userCredentials.Username,
-                Password = hashManager.HashPassword(userCredentials.Password),
+                UserName = userCredentials.Username,
+                Password = _hashManager.HashPassword(userCredentials.Password),
                 IsAdmin = false
             };
 
-            await userRepository.AddUserAsync(newUser, cancellationToken);
+            await _userService.AddUserAsync(newUser, cancellationToken);
 
-            logger.LogInformation("Add: Status 201, Created");
+            _logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -101,50 +102,44 @@ public class UserController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Remove: Status 400, Bad Request");
+                _logger.LogError("Remove: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken]) {
-                string? username = tokenManager.GetUsername(token);
+            if (token != _configuration[Config.GlobalAdminToken]) {
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
 
-            User? existingUser = await userRepository.GetUserAsync(userToRemove.Username, cancellationToken);
+            User? existingUser = await _userService.GetUserAsync(userToRemove.Username, cancellationToken);
 
             if (existingUser == null)
             {
-                logger.LogInformation("Remove: Status 404, Not found");
+                _logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isUserRemoved = await userRepository.RemoveUserAsync(userToRemove.Username, cancellationToken);
+            await _userService.RemoveUserAsync(existingUser.UserName, cancellationToken);
 
-            if (!isUserRemoved)
-            {
-                logger.LogInformation("Remove: 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("Remove: Status 200, OK");
+            _logger.LogInformation("Remove: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -154,37 +149,44 @@ public class UserController : ControllerBase
     {
         try
         {
-            string? username = tokenManager.GetUsername(token);
+            string? username = _tokenManager.GetUsername(token);
 
             if (username == null)
             {
-                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
+                _logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            User? user = await userRepository.GetUserAsync(username, cancellationToken);
+            User? user = await _userService.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
-                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
+                _logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            DeskInformation? bookingInfo = await userRepository.GetBookedDeskInformationAsync(username, cancellationToken);
+            Desk? bookedDesk = user.Bookings
+                .Select(b => b.Desk)
+                .FirstOrDefault();
 
-            if (bookingInfo == null)
+            if (bookedDesk == null)
             {
-                logger.LogInformation("GetBookedDeskInfo: Status 404, Not found");
+                _logger.LogInformation("GetBookedDeskInfo: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            logger.LogInformation("GetBookedDeskInfo: Status 200, OK", JsonHelper.Serialize(bookingInfo));
-            return StatusCode(StatusCodes.Status200OK);
+            DeskInformation bookingInfo = new DeskInformation
+            {
+                DeskName = bookedDesk.DeskName,
+                LocationName = bookedDesk.Location.LocationName
+            };
 
+            _logger.LogInformation("GetBookedDeskInfo: Status 200, OK", JsonHelper.Serialize(bookingInfo));
+            return StatusCode(StatusCodes.Status200OK, bookingInfo);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -194,21 +196,21 @@ public class UserController : ControllerBase
     {
         try
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            if (globalAdminToken != _configuration[Config.GlobalAdminToken])
             {
-                logger.LogError("GetAll: Status 401, Unauthorized");
+                _logger.LogError("GetAll: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            List<User> users = await userRepository.GetAllUsersAsync(cancellationToken);
+            List<User>? users = await _userService.GetAllUsersAsync(cancellationToken);
 
-            logger.LogInformation("GetAll: Status 200, OK");
+            _logger.LogInformation("GetAll: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, users);
 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -218,21 +220,21 @@ public class UserController : ControllerBase
     {
         try
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            if (globalAdminToken != _configuration[Config.GlobalAdminToken])
             {
-                logger.LogError("GetAllSessions: Status 401, Unauthorized");
+                _logger.LogError("GetAllSessions: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Dictionary<string, string> sessions = tokenManager.GetAllSessions();
+            Dictionary<string, string> sessions = _tokenManager.GetAllSessions();
 
-            logger.LogInformation("GetAllSessions: Status 200, OK");
+            _logger.LogInformation("GetAllSessions: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, sessions);
 
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -244,23 +246,23 @@ public class UserController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("LogIn: Status 400, Bad Request");
+                _logger.LogError("LogIn: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            User? user = await userRepository.GetUserAsync(userCredentials.Username, cancellationToken);
+            User? user = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
 
             if (user == null)
             {
-                logger.LogInformation("LogIn: Status 404, Not Found");
+                _logger.LogInformation("LogIn: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isPasswordCorrect = hashManager.VerifyPassword(userCredentials.Password, user.Password);
+            bool isPasswordCorrect = _hashManager.VerifyPassword(userCredentials.Password, user.Password);
 
             if (!isPasswordCorrect)
             {
-                logger.LogError("LogIn: Status 401, Unauthorized");
+                _logger.LogError("LogIn: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
@@ -271,12 +273,12 @@ public class UserController : ControllerBase
                 Token = token
             };
 
-            logger.LogInformation("LogIn: Status 200, OK");
+            _logger.LogInformation("LogIn: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -288,18 +290,18 @@ public class UserController : ControllerBase
         {
             if (token == null || token == "")
             {
-                logger.LogError("LogOut: Status 400, Bad Request");
+                _logger.LogError("LogOut: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            bool userLoggedOut = tokenManager.RemoveToken(token);
+            bool userLoggedOut = _tokenManager.RemoveToken(token);
 
-            logger.LogInformation("LogOut: Status 200, OK");
+            _logger.LogInformation("LogOut: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, userLoggedOut);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -309,26 +311,26 @@ public class UserController : ControllerBase
     {
         try
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            if (globalAdminToken != _configuration[Config.GlobalAdminToken])
             {
-                logger.LogInformation("IsAdmin: Status 401, Unauthorized");
+                _logger.LogInformation("IsAdmin: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            User? user = await userRepository.GetUserAsync(username, cancellationToken);
+            User? user = await _userService.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
-                logger.LogInformation("IsAdmin: Status 404, Not Found");
+                _logger.LogInformation("IsAdmin: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            logger.LogInformation("IsAdmin: Status 200, OK");
+            _logger.LogInformation("IsAdmin: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, user.IsAdmin);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -338,54 +340,54 @@ public class UserController : ControllerBase
     {
         try
         {
-            string? username = tokenManager.GetUsername(token);
+            string? username = _tokenManager.GetUsername(token);
 
             if (username == null)
             {
-                logger.LogError("IsAdmin: Status 404, Not found");
+                _logger.LogError("GetUserInfo: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            User? user = await userRepository.GetUserAsync(username, cancellationToken);
+            User? user = await _userService.GetUserAsync(username, cancellationToken);
 
             if (user == null)
             {
-                logger.LogError("IsAdmin: Status 404, Not found");
+                _logger.LogError("GetUserInfo: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            List<Desk> desks = await deskRepository.GetAllDesksAsync(cancellationToken);
-            Desk? bookedDesk = desks.FirstOrDefault(d => d.Booking?.Username == username);
-            ClientsideDesk? clientsideDesk = null;
-            
+            Desk? bookedDesk = user.Bookings
+                .Select(b => b.Desk)
+                .FirstOrDefault();
+
+            DeskDTO? deskDTO = null;
+
             if (bookedDesk != null)
             {
-                #nullable disable
-                clientsideDesk = new ClientsideDesk()
+                deskDTO = new DeskDTO
                 {
                     DeskName = bookedDesk.DeskName,
                     IsEnabled = bookedDesk.IsEnabled,
                     Username = username,
-                    StartTime = bookedDesk.Booking.StartTime.Value.ToString("dd-MM-yyyy"),
-                    EndTime = bookedDesk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
+                    StartTime = bookedDesk.Bookings.First().StartTime?.ToString("dd-MM-yyyy"),
+                    EndTime = bookedDesk.Bookings.First().EndTime?.ToString("dd-MM-yyyy")
                 };
-                #nullable enable
             }
 
-            UserInfoOutput output = new UserInfoOutput()
+            UserInfoOutput output = new UserInfoOutput
             {
-                Username = user.Username,
+                Username = user.UserName,
                 IsAdmin = user.IsAdmin,
-                BookedDesk = clientsideDesk,
+                BookedDesk = deskDTO,
                 BookedDeskLocation = bookedDesk?.Location?.LocationName
             };
 
-            logger.LogInformation("IsAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            _logger.LogInformation("GetUserInfo: Status 200, OK");
+            return StatusCode(StatusCodes.Status200OK, output);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -397,42 +399,52 @@ public class UserController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("SetAdmin: Status 400, Bad Request");
+                _logger.LogError("SetAdmin: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken]) {
-                string? username = tokenManager.GetUsername(token);
+            if (token != _configuration[Config.GlobalAdminToken]) {
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogError("SetAdmin: Status 401, Unauthorized");
+                    _logger.LogError("SetAdmin: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("SetAdmin: Status 401, Unauthorized");
+                    _logger.LogError("SetAdmin: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
 
-            bool statusSet = await userRepository.SetAdminStatus(userAdminStatus.Username, userAdminStatus.IsAdmin, cancellationToken);
+            User? userr = await _userService.GetUserAsync(userAdminStatus.Username, cancellationToken);
+
+            if (userr == null)
+            {
+                _logger.LogError("SetAdmin: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            userr.IsAdmin = userAdminStatus.IsAdmin;
+
+            bool statusSet = await _userService.UpdateUserAsync(userr, cancellationToken);
 
             if (!statusSet)
             {
-                logger.LogInformation("SetAdmin: Status 404, Not Found");
+                _logger.LogInformation("SetAdmin: Status 404, Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            logger.LogInformation("SetAdmin: Status 200, OK");
+            _logger.LogInformation("SetAdmin: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

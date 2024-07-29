@@ -1,9 +1,9 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Dotnet.Server.Helpers;
+using Dotnet.Server.Services;
 
 namespace Dotnet.Server.Controllers;
 
@@ -11,25 +11,25 @@ namespace Dotnet.Server.Controllers;
 [Route("api/[controller]")]
 public class DeskController : ControllerBase
 {
-    private readonly ILogger<DeskController> logger;
-    private readonly IConfiguration configuration;
-    private readonly IUserRepository userRepository;
-    private readonly IDeskRepository deskRepository;
-    private readonly ISessionTokenManager tokenManager;
+    private readonly ILogger<DeskController> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IUserService _userService;
+    private readonly IDeskService _deskService;
+    private readonly ISessionTokenManager _tokenManager;
 
     public DeskController(
         ILogger<DeskController> logger,
         IConfiguration configuration,
-        IUserRepository userRepository,
-        IDeskRepository deskRepository,
+        IUserService userRepository,
+        IDeskService deskRepository,
         ISessionTokenManager tokenManager
     )
     {
-        this.logger = logger;
-        this.configuration = configuration;
-        this.userRepository = userRepository;
-        this.deskRepository = deskRepository;
-        this.tokenManager = tokenManager;
+        _logger = logger;
+        _configuration = configuration;
+        _userService = userRepository;
+        _deskService = deskRepository;
+        _tokenManager = tokenManager;
     }
 
     [HttpPost("Add")]
@@ -39,51 +39,51 @@ public class DeskController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Add: Status 400, Bad Request");
+                _logger.LogError("Add: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken])
+            if (token != _configuration[Config.GlobalAdminToken])
             {
-                string? username = tokenManager.GetUsername(token);
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("Add: Status 401, Unauthorized");
+                    _logger.LogError("Add: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
 
-            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
+            Desk? desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
 
             if (desk == null)
             {
-                logger.LogInformation("Add: Status 409, Conflict");
+                _logger.LogInformation("Add: Status 409, Conflict");
                 return StatusCode(StatusCodes.Status409Conflict);
             }
 
-            bool deskAdded = await deskRepository.AddDeskAsync(deskInfo, cancellationToken);
+            bool deskAdded = await _deskService.AddDeskAsync(deskInfo, cancellationToken);
 
             if (!deskAdded)
             {
-                logger.LogInformation("Add: Status 500, Internal server error");
+                _logger.LogInformation("Add: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            logger.LogInformation("Add: Status 201, Created");
+            _logger.LogInformation("Add: Status 201, Created");
             return StatusCode(StatusCodes.Status201Created);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -95,51 +95,51 @@ public class DeskController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Remove: Status 400, Bad Request");
+                _logger.LogError("Remove: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken])
+            if (token != _configuration[Config.GlobalAdminToken])
             {
-                string? username = tokenManager.GetUsername(token);
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogInformation("Remove: Status 401, Unauthorized");
+                    _logger.LogInformation("Remove: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("Remove: Status 401, Unauthorized");
+                    _logger.LogError("Remove: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
 
-            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
+            Desk? desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
 
             if (desk == null)
             {
-                logger.LogInformation("Remove: Status 404, Not found");
+                _logger.LogInformation("Remove: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            bool isDeskRemoved = await deskRepository.RemoveDeskAsync(deskInfo, cancellationToken);
+            bool isDeskRemoved = await _deskService.RemoveDeskAsync(deskInfo, cancellationToken);
 
             if (!isDeskRemoved)
             {
-                logger.LogInformation("Remove: 500, Internal server error");
+                _logger.LogInformation("Remove: 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            logger.LogInformation("Remove: Status 200, OK");
+            _logger.LogInformation("Remove: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -151,25 +151,25 @@ public class DeskController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("SetDeskAvailability: Status 400, Bad Request");
+                _logger.LogError("SetDeskAvailability: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            if (token != configuration[Config.GlobalAdminToken])
+            if (token != _configuration[Config.GlobalAdminToken])
             {
-                string? username = tokenManager.GetUsername(token);
+                string? username = _tokenManager.GetUsername(token);
 
                 if (username == null)
                 {
-                    logger.LogError("SetDeskAvailability: Status 401, Unauthorized");
+                    _logger.LogError("SetDeskAvailability: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
 
-                User? user = await userRepository.GetUserAsync(username, cancellationToken);
+                User? user = await _userService.GetUserAsync(username, cancellationToken);
 
                 if (user == null || user.IsAdmin == false)
                 {
-                    logger.LogError("SetDeskAvailability: Status 401, Unauthorized");
+                    _logger.LogError("SetDeskAvailability: Status 401, Unauthorized");
                     return StatusCode(StatusCodes.Status401Unauthorized);
                 }
             }
@@ -180,28 +180,28 @@ public class DeskController : ControllerBase
                 LocationName = deskAvailabilityInfo.LocationName
             };
 
-            Desk desk = await deskRepository.GetDeskAsync(info, cancellationToken);
+            Desk? desk = await _deskService.GetDeskAsync(info, cancellationToken);
 
             if (desk == null)
             {
-                logger.LogInformation("SetDeskAvailability: Status 404 Not Found");
+                _logger.LogInformation("SetDeskAvailability: Status 404 Not Found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? clientSideDesk = await deskRepository.SetDeskAvailabilityAsync(info, deskAvailabilityInfo.IsEnabled, cancellationToken);
+            DeskDTO? clientSideDesk = await _deskService.SetDeskAvailabilityAsync(info, deskAvailabilityInfo.IsEnabled, cancellationToken);
 
             if (clientSideDesk == null)
             {
-                logger.LogInformation("SetDeskAvailability: Status 500, Internal server error");
+                _logger.LogInformation("SetDeskAvailability: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            logger.LogInformation("SetDeskAvailability: Status 200, OK");
+            _logger.LogInformation("SetDeskAvailability: Status 200, OK");
             return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientSideDesk));
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

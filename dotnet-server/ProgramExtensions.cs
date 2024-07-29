@@ -20,9 +20,18 @@ public static class ProgramExtensions
         return services;
     }
 
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ILocationService, LocationService>();
+        services.AddScoped<IDeskService, DeskService>();
+        services.AddScoped<IBookingService, BookingService>();
+        return services;
+    }
+
     public static IServiceCollection AddHostedServices(this IServiceCollection services)
     {
-        services.AddHostedService<DailyTaskService>();
+        services.AddScoped<DailyTaskService>();
         return services;
     }
 }

@@ -1,8 +1,8 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Dotnet.Server.Services;
 
 namespace Dotnet.Server.Controllers;
 
@@ -10,22 +10,25 @@ namespace Dotnet.Server.Controllers;
 [Route("api/[controller]")]
 public class BookingController : ControllerBase
 {
-    private readonly ILogger<BookingController> logger;
-    private readonly IDeskRepository deskRepository;
-    private readonly IBookingRepository bookingRepository;
-    private readonly ISessionTokenManager tokenManager;
+    private readonly ILogger<BookingController> _logger;
+    private readonly IDeskService _deskService;
+    private readonly IUserService _userService;
+    private readonly IBookingService _bookingService;
+    private readonly ISessionTokenManager _tokenManager;
 
     public BookingController(
         ILogger<BookingController> logger,
-        IDeskRepository deskRepository,
-        IBookingRepository bookingRepository,
+        IDeskService deskRepository,
+        IUserService userService,
+        IBookingService bookingService,
         ISessionTokenManager tokenManager
     )
     {
-        this.logger = logger;
-        this.deskRepository = deskRepository;
-        this.bookingRepository = bookingRepository;
-        this.tokenManager = tokenManager;
+        _logger = logger;
+        _deskService = deskRepository;
+        _userService = userService;
+        _bookingService = bookingService;
+        _tokenManager = tokenManager;
     }
 
     [HttpPut("Book")]
@@ -35,15 +38,15 @@ public class BookingController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Book: Status 400, Bad Request");
+                _logger.LogError("Book: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
+            string? username = _tokenManager.GetUsername(token);
 
             if (username == null)
             {
-                logger.LogInformation("Book: Status 401, Unauthorized");
+                _logger.LogInformation("Book: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
@@ -53,19 +56,27 @@ public class BookingController : ControllerBase
                 LocationName = bookingInfo.LocationName
             };
 
-            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
+            Desk? desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
 
             if (desk == null)
             {
-                logger.LogInformation("Book: Status 404, Not found");
+                _logger.LogInformation("Book: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? deskDTO = await bookingRepository.BookDeskAsync(username, bookingInfo, cancellationToken);
+            User? user = await _userService.GetUserAsync(username, cancellationToken);
+
+            if (user == null)
+            {
+                _logger.LogInformation("Book: Status 401, Unauthorized");
+                return StatusCode(StatusCodes.Status401Unauthorized);
+            }
+
+            DeskDTO? deskDTO = await _bookingService.AddBookingAsync(user, bookingInfo, cancellationToken);
 
             if (deskDTO == null)
             {
-                logger.LogInformation("Book: Status 500, Internal server error");
+                _logger.LogInformation("Book: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
@@ -73,7 +84,7 @@ public class BookingController : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }
@@ -85,31 +96,31 @@ public class BookingController : ControllerBase
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Unbook: Status 400, Bad Request");
+                _logger.LogError("Unbook: Status 400, Bad Request");
                 return StatusCode(StatusCodes.Status400BadRequest);
             }
 
-            string? username = tokenManager.GetUsername(token);
+            string? username = _tokenManager.GetUsername(token);
 
             if (username == null)
             {
-                logger.LogInformation("Unbook: Status 401, Unauthorized");
+                _logger.LogInformation("Unbook: Status 401, Unauthorized");
                 return StatusCode(StatusCodes.Status401Unauthorized);
             }
 
-            Desk desk = await deskRepository.GetDeskAsync(deskInfo, cancellationToken);
+            Desk? desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
 
             if (desk == null)
             {
-                logger.LogInformation("Unbook: Status 404, Not found");
+                _logger.LogInformation("Unbook: Status 404, Not found");
                 return StatusCode(StatusCodes.Status404NotFound);
             }
 
-            ClientsideDesk? clientsideDesk = await bookingRepository.UnBookDeskAsync(deskInfo, cancellationToken);
+            DeskDTO? clientsideDesk = await _bookingService.RemoveBookingAsync(deskInfo, cancellationToken);
 
             if (clientsideDesk == null)
             {
-                logger.LogInformation("Unbook: Status 500, Internal server error");
+                _logger.LogInformation("Unbook: Status 500, Internal server error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
@@ -117,7 +128,7 @@ public class BookingController : ControllerBase
         }
         catch (Exception ex)
         {
-            logger.LogError(ex.ToString());
+            _logger.LogError(ex.ToString());
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
     }

@@ -1,6 +1,6 @@
 namespace Dotnet.Server.Http;
 
-public class ClientsideDesk
+public class DeskDTO
 {
     public string DeskName { get; set; } = string.Empty;
     public bool IsEnabled { get; set; }

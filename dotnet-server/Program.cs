@@ -18,8 +18,9 @@ builder.Services.AddCors(options =>
     );
 });
 
-builder.Services.AddManagers();
 builder.Services.AddRepositories();
+builder.Services.AddServices();
+builder.Services.AddManagers();
 builder.Services.AddHostedServices();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Scoped);

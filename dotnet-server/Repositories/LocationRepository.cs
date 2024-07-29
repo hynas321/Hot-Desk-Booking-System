@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using System.Threading;
 
 namespace Dotnet.Server.Repositories;
 
@@ -19,22 +18,13 @@ public class LocationRepository : ILocationRepository
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public async Task<bool> RemoveLocationAsync(string locationName, CancellationToken cancellationToken)
+    public async Task RemoveLocationAsync(Location location, CancellationToken cancellationToken)
     {
-        Location? locationToRemove = await dbContext?.Locations?.FirstOrDefaultAsync(location => location.LocationName == locationName, cancellationToken);
-
-        if (locationToRemove == null || locationToRemove.Desks.Count != 0)
-        {
-            return false;
-        }
-
-        dbContext?.Locations.Remove(locationToRemove);
+        dbContext?.Locations.Remove(location);
         await dbContext?.SaveChangesAsync(cancellationToken);
-
-        return true;
     }
 
-    public async Task<Location?> GetLocationAsync(string locationName, CancellationToken cancellationToken)
+    public async Task<Location> GetLocationAsync(string locationName, CancellationToken cancellationToken)
     {
         return await dbContext.Locations.FirstOrDefaultAsync(location => location.LocationName == locationName, cancellationToken);
     }
@@ -42,10 +32,5 @@ public class LocationRepository : ILocationRepository
     public async Task<List<Location>> GetAllLocationsAsync(CancellationToken cancellationToken)
     {
         return await dbContext.Locations.ToListAsync(cancellationToken);
-    }
-
-    public async Task<bool> CheckIfLocationExists(string locationName, CancellationToken cancellationToken)
-    {
-        return await dbContext.Locations.AnyAsync(location => location.LocationName == locationName, cancellationToken);
     }
 }

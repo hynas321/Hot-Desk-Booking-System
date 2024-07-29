@@ -1,21 +1,25 @@
-using Dotnet.Server.Repositories;
+using Dotnet.Server.Http;
 
 namespace Dotnet.Server.Services;
 
-public class DailyTaskService : IHostedService, IDisposable
+public class DailyTaskService : IHostedService
 {
     #nullable disable warnings
     private readonly ILogger<DailyTaskService> logger;
     private readonly IServiceScopeFactory serviceScopeFactory;
+    private readonly IBookingService bookingService;
     private static bool activatedAfterServerStart = false;
     private Timer? timer;
 
     public DailyTaskService(
         ILogger<DailyTaskService> logger,
-        IServiceScopeFactory serviceScopeFactory)
+        IServiceScopeFactory serviceScopeFactory,
+        IBookingService bookingService)
     {
         this.logger = logger;
+        this.bookingService = bookingService;
         this.serviceScopeFactory = serviceScopeFactory;
+        this.bookingService = bookingService;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -43,7 +47,7 @@ public class DailyTaskService : IHostedService, IDisposable
         {
             var serviceProvider = scope.ServiceProvider;
             var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            var deskRepository = scope.ServiceProvider.GetRequiredService<IDeskRepository>();
+            var deskRepository = scope.ServiceProvider.GetRequiredService<DeskService>();
 
             List<Desk> desks = deskRepository.GetAllDesks();
             logger.LogInformation("Checking for obsolete bookings...");
@@ -52,7 +56,7 @@ public class DailyTaskService : IHostedService, IDisposable
 
             for (int i = 0; i < desks.Count; i++)
             {
-                DateTime? bookingEnd = desks[i].Booking?.EndTime;
+                DateTime? bookingEnd = desks[i].Bookings.First().EndTime;
 
                 DateTime utcNow = DateTime.UtcNow.AddDays(0);
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
@@ -64,17 +68,18 @@ public class DailyTaskService : IHostedService, IDisposable
 
                     if (difference >= 1)
                     {
-                        desks[i].Booking.Username = null;
-                        desks[i].IsEnabled = true;
-                        desks[i].Booking.StartTime = null;
-                        desks[i].Booking.EndTime = null;
-                        dbContext.Update(desks[i]);
+                        DeskInformation deskInformation = new DeskInformation()
+                        {
+                            DeskName = desks.ElementAt(i).DeskName,
+                            LocationName = desks.ElementAt(i).Location.LocationName
+                        };
+
+                        bookingService.RemoveBookingAsync(deskInformation, default);
                         obsoleteBookingsCount++;
                     }
                 }
             }
 
-            dbContext.SaveChanges();
             logger.LogInformation($"Found {obsoleteBookingsCount} obsolete bookings");
         }
     }
@@ -83,10 +88,5 @@ public class DailyTaskService : IHostedService, IDisposable
     {
         timer?.Dispose();
         return Task.CompletedTask;
-    }
-
-    public void Dispose()
-    {
-        timer?.Dispose();
     }
 }

@@ -4,7 +4,8 @@ namespace Dotnet.Server.Repositories;
 
 public interface IBookingRepository
 {
-    Task<ClientsideDesk?> BookDeskAsync(string username, BookingInformation bookingInformation, CancellationToken cancellationToken);
-    Task<ClientsideDesk?> UnBookDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken);
+    Task AddBookingAsync(Booking booking, CancellationToken cancellationToken);
+    Task RemoveBookingAsync(Booking booking, CancellationToken cancellationToken);
+    Task<Booking?> GetBookingAsync(DeskInformation deskInformation, CancellationToken cancellationToken);
 }
 
