@@ -64,7 +64,7 @@ public class UserController : ControllerBase
     }
 
     [HttpDelete("Remove")]
-    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] UserUsername userToRemove, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] string username, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
@@ -76,7 +76,7 @@ public class UserController : ControllerBase
             return Unauthorized("Unauthorized access.");
         }
 
-        var existingUser = await _userService.GetUserAsync(userToRemove.Username, cancellationToken);
+        var existingUser = await _userService.GetUserAsync(username, cancellationToken);
         if (existingUser == null)
         {
             return NotFound("User not found.");

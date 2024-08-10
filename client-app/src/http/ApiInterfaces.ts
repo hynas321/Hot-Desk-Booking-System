@@ -20,10 +20,6 @@ export interface UserCredentials {
   password: string;
 }
 
-export interface UserUsername {
-  username: string;
-}
-
 export interface UserInfoOutput {
   username: string;
   isAdmin: boolean;
