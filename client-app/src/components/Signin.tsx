@@ -2,13 +2,12 @@ import { useEffect, useState } from "react";
 import Button from "./Button";
 import TextForm from "./TextForm";
 import { useNavigate } from "react-router-dom";
-import ApiRequestHandler from "../http/ApiRequestHandler";
 import config from './../config.json';
 import useLocalStorageState from "use-local-storage-state";
 import { useDispatch } from "react-redux";
 import { updatedUsername } from "./redux/slices/user-slice";
 import { AlertManager } from "../managers/AlertManager";
-import { TokenOutput } from "../http/ApiInterfaces";
+import { ApiRequestHandler } from "../http/ApiRequestHandler";
 
 export default function Signin() {
   const [username, setUsername] = useState<string>("");
@@ -18,8 +17,8 @@ export default function Signin() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
-  const alertManager: AlertManager = new AlertManager();
+  const apiRequestHandler = ApiRequestHandler.getInstance();
+  const alertManager = new AlertManager();
 
   useEffect(() => {
     if (username.length >= 5 && password.length >= 5) {
@@ -32,7 +31,7 @@ export default function Signin() {
 
   const handleButtonClick = () => {
     const logInAsync = async () => {
-      const tokenObj: TokenOutput = await apiRequestHandler.logIn(username, password);
+      const tokenObj: any = await apiRequestHandler.logIn(username, password);
 
       if (typeof(tokenObj.token) !== "string") {
         alertManager.displayAlert("Could not log in, check your username or password", "danger");

@@ -5,13 +5,13 @@ import { Desk } from '../types/Desk'
 import Popup from '../components/Popup';
 import { useLocation, useNavigate } from 'react-router-dom';
 import config from './../config.json';
-import ApiRequestHandler from '../http/ApiRequestHandler';
 import TopBar from '../components/TopBar';
 import useLocalStorageState from 'use-local-storage-state';
 import { useAppSelector } from '../components/redux/hooks';
 import { AlertManager } from '../managers/AlertManager';
 import { useDispatch } from 'react-redux';
 import { updatedBookedDesk, updatedBookedDeskLocation } from '../components/redux/slices/user-slice';
+import ApiRequestHandler from '../http/ApiRequestHandler';
 
 export default function DesksView() {
   const [desks, setDesks] = useState<Desk[]>([]);
@@ -25,7 +25,7 @@ export default function DesksView() {
   const { locationName } = location.state ?? "-";
   const isUserAdmin = useAppSelector((state) => state.user.isAdmin);
 
-  const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
+  const apiRequestHandler = ApiRequestHandler.getInstance();
   const alertManager: AlertManager = new AlertManager();
 
   // eslint-disable-next-line
@@ -37,6 +37,7 @@ export default function DesksView() {
     const fetchDesksAsync = async () => {
       const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(token, locationName);
 
+      console.log(fetchedDesks);  
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
         navigate(config.locationsViewClientEndpoint);

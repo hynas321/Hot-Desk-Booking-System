@@ -1,10 +1,13 @@
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options => 
 {
     options.JsonSerializerOptions.PropertyNamingPolicy = new PascalCaseNamingPolicy();
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+    options.JsonSerializerOptions.WriteIndented = true;
 });
 
 builder.Services.AddEndpointsApiExplorer();

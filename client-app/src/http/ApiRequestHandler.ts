@@ -5,14 +5,26 @@ import { BookingInformation, DeskAvailabilityInformation, DeskInformation, Locat
 import { Location } from '../types/Location'
 import { Desk } from '../types/Desk';
 
-class HttpRequestHandler {
-  private httpServerUrl: string = config.httpServerURL;
+export class ApiRequestHandler {
+  private static instance: ApiRequestHandler;
+  private readonly httpServerUrl: string = config.httpServerURL;
 
-  //User requests
+  private constructor() {
+    this.httpServerUrl = config.httpServerURL;
+  }
+
+  public static getInstance(): ApiRequestHandler {
+    if (!ApiRequestHandler.instance) {
+      ApiRequestHandler.instance = new ApiRequestHandler();
+    }
+    return ApiRequestHandler.instance;
+  }
+
+  // User requests
   async logIn(username: string, password: string): Promise<any> {
     const requestBody: UserCredentials = {
-        username: username,
-        password: password
+      username: username,
+      password: password
     };
 
     try {
@@ -26,11 +38,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as TokenOutput;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -50,35 +61,32 @@ class HttpRequestHandler {
       }
 
       return response.status;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
 
   async getUserInfo(token: string): Promise<any> {
     try {
-        const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            [ApiHeaders.token]: token
-          }
-        });
-  
-        if (!response.ok) {
-          throw new Error("Error");
-        } 
-  
-        return await response.json() as UserInfoOutput;
-    }
-    catch (error) {
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          [ApiHeaders.token]: token
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Error");
+      }
+
+      return await response.json() as UserInfoOutput;
+    } catch (error) {
       return error;
     }
   }
-  
 
-  //Location requests
+  // Location requests
   async addLocation(token: string, name: string): Promise<any> {
     const requestBody: LocationName = {
       name: name
@@ -96,11 +104,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return response.status;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -119,14 +126,13 @@ class HttpRequestHandler {
           [ApiHeaders.token]: token
         }
       });
-      
+
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return response.status;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -142,11 +148,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as Location[];
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -160,19 +165,18 @@ class HttpRequestHandler {
           [ApiHeaders.token]: token
         }
       });
-
+      
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as Desk[];
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
 
-  //Desk requests
+  // Desk requests
   async addDesk(token: string, deskName: string, locationName: string): Promise<any> {
     const requestBody: DeskInformation = {
       deskName: deskName,
@@ -191,11 +195,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return response.status;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -218,11 +221,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return response.status;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -232,7 +234,7 @@ class HttpRequestHandler {
       deskName: deskName,
       locationName: locationName,
       days: days
-    }
+    };
 
     try {
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.bookDesk}`, {
@@ -246,11 +248,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as Desk;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -259,7 +260,7 @@ class HttpRequestHandler {
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName
-    }
+    };
 
     try {
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.unbookDesk}`, {
@@ -273,11 +274,10 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as Desk;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
@@ -287,7 +287,7 @@ class HttpRequestHandler {
       deskName: deskName,
       locationName: locationName,
       isEnabled: isEnabled
-    }
+    };
 
     try {
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.setDeskAvailability}`, {
@@ -301,14 +301,13 @@ class HttpRequestHandler {
 
       if (!response.ok) {
         throw new Error("Error");
-      } 
+      }
 
       return await response.json() as Desk;
-    }
-    catch (error) {
+    } catch (error) {
       return error;
     }
   }
 }
 
-export default HttpRequestHandler;
+export default ApiRequestHandler;

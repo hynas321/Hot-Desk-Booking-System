@@ -5,11 +5,11 @@ import config from './../config.json';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import Popup from '../components/Popup';
-import ApiRequestHandler from '../http/ApiRequestHandler';
 import useLocalStorageState from 'use-local-storage-state';
 import TopBar from '../components/TopBar';
 import { useAppSelector } from '../components/redux/hooks';
 import { AlertManager } from '../managers/AlertManager';
+import ApiRequestHandler from '../http/ApiRequestHandler';
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
@@ -19,8 +19,8 @@ export default function LocationsView() {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user);
 
-  const apiRequestHandler: ApiRequestHandler = new ApiRequestHandler();
-  const alertManager: AlertManager = new AlertManager();
+  const apiRequestHandler = ApiRequestHandler.getInstance();
+  const alertManager = new AlertManager();
 
   // eslint-disable-next-line
   useEffect(() => {

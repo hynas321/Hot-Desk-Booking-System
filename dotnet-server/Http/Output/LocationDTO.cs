@@ -1,6 +1,6 @@
 namespace Dotnet.Server.Http;
 
-public class ClientsideLocation
+public class LocationDTO
 {
 	public string LocationName { get; set; } = string.Empty;
     public int TotalDeskCount { get; set; }

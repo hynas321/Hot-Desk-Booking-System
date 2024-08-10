@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 public class Desk
 {
@@ -15,8 +16,10 @@ public class Desk
 
     // Navigation property for Location
     [ForeignKey("LocationId")]
+    [JsonIgnore]
     public virtual Location Location { get; set; }
 
     // Navigation property for Bookings
+    [JsonIgnore]
     public virtual List<Booking> Bookings { get; set; } = new List<Booking>();
 }

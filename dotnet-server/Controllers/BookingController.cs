@@ -93,14 +93,14 @@ namespace Dotnet.Server.Controllers
                 return NotFound();
             }
 
-            var clientsideDesk = await _bookingService.RemoveBookingAsync(deskInfo, cancellationToken);
-            if (clientsideDesk == null)
+            var deskDTO = await _bookingService.RemoveBookingAsync(deskInfo, cancellationToken);
+            if (deskDTO == null)
             {
                 _logger.LogInformation("Unbook: Status 500, Internal Server Error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            return Ok(JsonHelper.Serialize(clientsideDesk));
+            return Ok(JsonHelper.Serialize(deskDTO));
         }
     }
 }

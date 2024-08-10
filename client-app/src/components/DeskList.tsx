@@ -88,7 +88,7 @@ export default function DeskList({desks, onBookClick, onUnbookClick, onRemoveCli
                     :
                     <Button
                       text="Book desk"
-                      active={desk.username === null && desk.isEnabled && !user.bookedDesk}
+                      active={desk.username === null && desk.isEnabled}
                       spacing={0}
                       type="primary"
                       onClick={() => onBookClick(desk.deskName)}

@@ -1,5 +1,4 @@
 import useLocalStorageState from "use-local-storage-state";
-import ApiRequestHandler from "../http/ApiRequestHandler";
 import Button from "./Button";
 import { useNavigate } from "react-router-dom";
 import config from './../config.json';
@@ -9,6 +8,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { updatedBookedDesk, updatedBookedDeskLocation, updatedIsAdmin, updatedUsername } from "./redux/slices/user-slice";
 import { UserInfoOutput } from "../http/ApiInterfaces";
+import { ApiRequestHandler } from "../http/ApiRequestHandler";
 
 
 interface TopBarProps {
@@ -21,9 +21,8 @@ export default function TopBar({isUserInfoVisible}: TopBarProps) {
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user)
 
-  const apiRequestHandler = new ApiRequestHandler();
-  
-  // eslint-disable-next-line
+  const apiRequestHandler = ApiRequestHandler.getInstance();
+
   useEffect(() => {
     if (!isUserInfoVisible && user.username === "User") {
       return;

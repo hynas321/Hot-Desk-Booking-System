@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 public class Location
 {
@@ -8,5 +9,6 @@ public class Location
     public string LocationName { get; set; } = string.Empty;
 
     // Navigation property for Desks
+    [JsonIgnore]
     public virtual List<Desk> Desks { get; set; } = new List<Desk>();
 }

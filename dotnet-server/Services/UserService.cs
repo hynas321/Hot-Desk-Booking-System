@@ -41,10 +41,10 @@ public class UserService : IUserService
     {
         var existingUser = await userRepository.GetUserAsync(user.UserName, cancellationToken);
 
-        if (existingUser != null)
+        if (existingUser == null)
         {
-            return true;
-        }
+            return false;
+        } 
 
         await userRepository.UpdateUserAsync(user, cancellationToken);
         return true;

@@ -99,6 +99,7 @@ public class LocationController : ControllerBase
     [HttpGet("GetDesks/{locationName}")]
     public async Task<IActionResult> GetDesks([FromHeader] string token, [FromRoute] string locationName, CancellationToken cancellationToken = default)
     {
+        // Get the location
         var location = await _locationService.GetLocationAsync(locationName, cancellationToken);
         if (location == null)
         {
@@ -106,25 +107,37 @@ public class LocationController : ControllerBase
             return NotFound();
         }
 
+        // Get the username from the token
         var username = token != _configuration[Config.GlobalAdminToken]
             ? await GetUsernameFromTokenAsync(token, cancellationToken)
             : null;
 
+        // Get the user object if the username is not null
         var user = username != null ? await _userService.GetUserAsync(username, cancellationToken) : null;
 
-        var desksDTO = location.Desks.Select(d => new DeskDTO
+        if (user == null && username != null)
         {
-            DeskName = d.DeskName,
-            IsEnabled = d.IsEnabled,
-            Username = (user?.IsAdmin == true || d.Bookings.Any(b => b.UserId == username))
-                ? d.Bookings.FirstOrDefault(b => b.UserId == username)?.User?.UserName ?? "-"
-                : "-",
-            StartTime = d.Bookings.FirstOrDefault(b => b.UserId == username)?.StartTime?.ToString("dd-MM-yyyy"),
-            EndTime = d.Bookings.FirstOrDefault(b => b.UserId == username)?.EndTime?.ToString("dd-MM-yyyy")
+            _logger.LogWarning($"GetDesks: Could not find user with username {username}");
+        }
+
+        var desksDTO = location.Desks.Select(d =>
+        {
+            var relevantBooking = user != null
+                ? d.Bookings.FirstOrDefault(b => b.UserId == user.Id)
+                : null;
+
+            return new DeskDTO
+            {
+                DeskName = d.DeskName,
+                IsEnabled = d.IsEnabled,
+                Username = relevantBooking?.UserId != null ? username : null,
+                StartTime = relevantBooking?.StartTime?.ToString("dd-MM-yyyy") ?? "-",
+                EndTime = relevantBooking?.EndTime?.ToString("dd-MM-yyyy") ?? "-"
+            };
         }).ToList();
 
         _logger.LogInformation("GetDesks: Status 200, OK");
-        return Ok(desksDTO);
+        return Ok(JsonHelper.Serialize(desksDTO));
     }
 
     [HttpGet("GetAllNames")]
@@ -132,7 +145,7 @@ public class LocationController : ControllerBase
     {
         var locations = await _locationService.GetAllLocationsAsync(cancellationToken);
 
-        var clientsideLocations = locations.Select(loc => new ClientsideLocation
+        var locationDTO = locations.Select(loc => new LocationDTO
         {
             LocationName = loc.LocationName,
             TotalDeskCount = loc.Desks.Count,
@@ -140,7 +153,7 @@ public class LocationController : ControllerBase
         }).ToList();
 
         _logger.LogInformation("GetAllNames: Status 200, OK");
-        return Ok(clientsideLocations);
+        return Ok(JsonHelper.Serialize(locationDTO));
     }
 
     [HttpGet("GetAll")]

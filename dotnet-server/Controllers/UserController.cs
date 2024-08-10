@@ -1,9 +1,9 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Repositories;
 using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Dotnet.Server.Services;
+using Dotnet.Server.Helpers;
 
 namespace Dotnet.Server.Controllers;
 
@@ -137,7 +137,7 @@ public class UserController : ControllerBase
         }
 
         var sessions = _tokenManager.GetAllSessions();
-        return Ok(sessions);
+        return Ok(JsonHelper.Serialize(sessions));
     }
 
     [HttpPost("LogIn")]
@@ -161,7 +161,7 @@ public class UserController : ControllerBase
 
         var token = _tokenManager.CreateToken(userCredentials.Username);
         var output = new TokenOutput { Token = token };
-        return Ok(output);
+        return Ok(JsonHelper.Serialize(output));
     }
 
     [HttpPut("LogOut")]
@@ -226,7 +226,7 @@ public class UserController : ControllerBase
             BookedDeskLocation = bookedDesk?.Location?.LocationName
         };
 
-        return Ok(output);
+        return Ok(JsonHelper.Serialize(output));
     }
 
     [HttpPut("SetAdmin")]
@@ -250,12 +250,12 @@ public class UserController : ControllerBase
 
         user.IsAdmin = userAdminStatus.IsAdmin;
         var statusSet = await _userService.UpdateUserAsync(user, cancellationToken);
-
         if (!statusSet)
         {
             return NotFound("Failed to update user.");
         }
 
+        _logger.LogInformation($"SetAdmin: {userAdminStatus.Username} IsAdmin - {userAdminStatus.IsAdmin}");
         return Ok();
     }
 

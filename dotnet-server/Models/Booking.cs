@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 public class Booking
 {
@@ -18,9 +19,11 @@ public class Booking
 
     // Navigation property for Desk
     [ForeignKey("DeskId")]
+    [JsonIgnore]
     public virtual Desk? Desk { get; set; }
 
     // Navigation property for User
     [ForeignKey("UserId")]
+    [JsonIgnore]
     public virtual User? User { get; set; }
 }
