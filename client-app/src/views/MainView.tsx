@@ -7,6 +7,5 @@ export default function MainView() {
       <TopBar isUserInfoVisible={false} />
       <Signin />
     </div>
-  )
+  );
 }
-  

@@ -34,7 +34,7 @@ export interface TokenOutput {
 export interface DeskAvailabilityInformation {
   deskName: string;
   locationName: string;
-  isEnabled: boolean
+  isEnabled: boolean;
 }
 
 export interface DeskIsEnabled {

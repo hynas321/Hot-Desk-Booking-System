@@ -1,15 +1,15 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Alert {
   text: string;
   visible: boolean;
   type: string;
-};
+}
 
 const initialState: Alert = {
   text: "",
   visible: false,
-  type: "danger"
+  type: "danger",
 };
 
 const gameSettingsSlice = createSlice({
@@ -29,9 +29,10 @@ const gameSettingsSlice = createSlice({
       state.text = action.payload.text;
       state.visible = action.payload.visible;
       state.type = action.payload.type;
-    }
-  }
-})
+    },
+  },
+});
 
-export const { updatedText, updatedVisible, updatedType, updatedAlert } = gameSettingsSlice.actions;
+export const { updatedText, updatedVisible, updatedType, updatedAlert } =
+  gameSettingsSlice.actions;
 export default gameSettingsSlice.reducer;
