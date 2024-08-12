@@ -102,7 +102,11 @@ export default function DeskList({
                 ) : (
                   <Button
                     text="Book desk"
-                    active={desk.username === null && desk.isEnabled}
+                    active={
+                      desk.username === null &&
+                      desk.isEnabled &&
+                      user.bookedDesk === null
+                    }
                     spacing={0}
                     type="primary"
                     onClick={() => onBookClick(desk.deskName)}

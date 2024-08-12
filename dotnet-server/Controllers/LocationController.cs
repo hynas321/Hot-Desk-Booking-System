@@ -99,7 +99,6 @@ public class LocationController : ControllerBase
     [HttpGet("GetDesks/{locationName}")]
     public async Task<IActionResult> GetDesks([FromHeader] string token, [FromRoute] string locationName, CancellationToken cancellationToken = default)
     {
-        // Get the location
         var location = await _locationService.GetLocationAsync(locationName, cancellationToken);
         if (location == null)
         {
@@ -107,12 +106,10 @@ public class LocationController : ControllerBase
             return NotFound();
         }
 
-        // Get the username from the token
         var username = token != _configuration[Config.GlobalAdminToken]
             ? await GetUsernameFromTokenAsync(token, cancellationToken)
             : null;
 
-        // Get the user object if the username is not null
         var user = username != null ? await _userService.GetUserAsync(username, cancellationToken) : null;
 
         if (user == null && username != null)
@@ -122,15 +119,13 @@ public class LocationController : ControllerBase
 
         var desksDTO = location.Desks.Select(d =>
         {
-            var relevantBooking = user != null
-                ? d.Bookings.FirstOrDefault(b => b.UserId == user.Id)
-                : null;
+            var relevantBooking = d.Bookings.FirstOrDefault();
 
             return new DeskDTO
             {
                 DeskName = d.DeskName,
                 IsEnabled = d.IsEnabled,
-                Username = relevantBooking?.UserId != null ? username : null,
+                Username = relevantBooking?.User.UserName,
                 StartTime = relevantBooking?.StartTime?.ToString("dd-MM-yyyy") ?? "-",
                 EndTime = relevantBooking?.EndTime?.ToString("dd-MM-yyyy") ?? "-"
             };

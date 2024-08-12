@@ -43,7 +43,6 @@ export default function DesksView() {
         locationName
       );
 
-      console.log(fetchedDesks);
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
         navigate(config.locationsViewClientEndpoint);
@@ -79,7 +78,7 @@ export default function DesksView() {
       );
       return;
     }
-    console.log(bookedDesk);
+
     const deskIndex = desks.findIndex((desk) => desk.deskName === deskName);
 
     const updatedDesks = [...desks];

@@ -24,7 +24,7 @@ public class BookingService : IBookingService
 
         var desk = await deskRepository.GetDeskAsync(deskInformation, cancellationToken);
 
-        if (desk == null || desk.Bookings.Any() || !desk.IsEnabled)
+        if (desk == null || desk.Bookings.Any() || user.Bookings.Any() || !desk.IsEnabled)
         {
             return null;
         }
@@ -34,7 +34,7 @@ public class BookingService : IBookingService
         var startTime = localTime;
         var endTime = localTime.AddDays(bookingInformation.Days - 1);
 
-        Booking booking = new Booking
+        Booking newBooking = new Booking
         {
             StartTime = startTime,
             EndTime = endTime,
@@ -42,7 +42,7 @@ public class BookingService : IBookingService
             Desk = desk
         };
 
-        await bookingRepository.AddBookingAsync(booking, cancellationToken);
+        await bookingRepository.AddBookingAsync(newBooking, cancellationToken);
 
         return new DeskDTO
         {
