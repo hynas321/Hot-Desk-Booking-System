@@ -1,92 +1,87 @@
 using Dotnet.Server.Http;
 
-namespace Dotnet.Server.Services;
-
-public class DailyTaskService : IHostedService
+namespace Dotnet.Server.Services
 {
-    #nullable disable warnings
-    private readonly ILogger<DailyTaskService> logger;
-    private readonly IServiceScopeFactory serviceScopeFactory;
-    private readonly IBookingService bookingService;
-    private static bool activatedAfterServerStart = false;
-    private Timer? timer;
-
-    public DailyTaskService(
-        ILogger<DailyTaskService> logger,
-        IServiceScopeFactory serviceScopeFactory,
-        IBookingService bookingService)
+    public class DailyTaskService : IHostedService
     {
-        this.logger = logger;
-        this.bookingService = bookingService;
-        this.serviceScopeFactory = serviceScopeFactory;
-        this.bookingService = bookingService;
-    }
+        private readonly ILogger<DailyTaskService> logger;
+        private readonly IServiceScopeFactory serviceScopeFactory;
+        private Timer? timer;
+        private static bool activatedAfterServerStart = false;
 
-    public Task StartAsync(CancellationToken cancellationToken)
-    {
-        if (!activatedAfterServerStart)
+        public DailyTaskService(
+            ILogger<DailyTaskService> logger,
+            IServiceScopeFactory serviceScopeFactory)
         {
-            DoWork(new object());
-            activatedAfterServerStart = true;
+            this.logger = logger;
+            this.serviceScopeFactory = serviceScopeFactory;
         }
 
-        DateTime utcNow = DateTime.UtcNow;
-        TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
-        DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
-        DateTime nextRun = utcNow.Date.AddDays(1);
-        TimeSpan timeUntilNextRun = nextRun - utcNow;
-
-        timer = new Timer(DoWork, null, timeUntilNextRun, TimeSpan.FromDays(1));
-
-        return Task.CompletedTask;
-    }
-
-    private void DoWork(object state)
-    {
-        using (var scope = serviceScopeFactory.CreateScope())
+        public Task StartAsync(CancellationToken cancellationToken)
         {
-            var serviceProvider = scope.ServiceProvider;
-            var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
-            var deskRepository = scope.ServiceProvider.GetRequiredService<DeskService>();
-
-            List<Desk> desks = deskRepository.GetAllDesks();
-            logger.LogInformation("Checking for obsolete bookings...");
-
-            int obsoleteBookingsCount = 0;
-
-            for (int i = 0; i < desks.Count; i++)
+            if (!activatedAfterServerStart)
             {
-                DateTime? bookingEnd = desks[i].Bookings.First().EndTime;
-
-                DateTime utcNow = DateTime.UtcNow.AddDays(0);
-                TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
-                DateTime localTime = TimeZoneInfo.ConvertTimeFromUtc(utcNow, localTimeZone);
-
-                if (bookingEnd.HasValue)
-                {
-                    int difference = localTime.Day - bookingEnd.Value.Day;
-
-                    if (difference >= 1)
-                    {
-                        DeskInformation deskInformation = new DeskInformation()
-                        {
-                            DeskName = desks.ElementAt(i).DeskName,
-                            LocationName = desks.ElementAt(i).Location.LocationName
-                        };
-
-                        bookingService.RemoveBookingAsync(deskInformation, default);
-                        obsoleteBookingsCount++;
-                    }
-                }
+                DoWork(null);
+                activatedAfterServerStart = true;
             }
 
-            logger.LogInformation($"Found {obsoleteBookingsCount} obsolete bookings");
-        }
-    }
+            var utcNow = DateTime.UtcNow;
+            var nextRun = utcNow.Date.AddDays(1).AddHours(0);
+            var timeUntilNextRun = nextRun - utcNow;
 
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        timer?.Dispose();
-        return Task.CompletedTask;
+            timer = new Timer(DoWork, null, timeUntilNextRun, TimeSpan.FromDays(1));
+
+            return Task.CompletedTask;
+        }
+
+        private void DoWork(object? state)
+        {
+            logger.LogInformation("Starting daily task execution.");
+
+            try
+            {
+                using (var scope = serviceScopeFactory.CreateScope())
+                {
+                    var serviceProvider = scope.ServiceProvider;
+                    var dbContext = serviceProvider.GetRequiredService<ApplicationDbContext>();
+                    var deskRepository = serviceProvider.GetRequiredService<IDeskService>();
+                    var bookingService = serviceProvider.GetRequiredService<IBookingService>();
+
+                    var desks = deskRepository.GetAllDesks();
+                    logger.LogInformation("Checking for obsolete bookings...");
+
+                    int obsoleteBookingsCount = 0;
+
+                    foreach (var desk in desks)
+                    {
+                        var obsoleteBookings = desk.Bookings.Where(b => b.EndTime < DateTime.UtcNow).ToList();
+
+                        foreach (var booking in obsoleteBookings)
+                        {
+                            DeskInformation deskInformation = new DeskInformation()
+                            {
+                                DeskName = desk.DeskName,
+                                LocationName = desk.Location.LocationName
+                            };
+
+                            bookingService.RemoveBookingAsync(deskInformation, default).Wait();
+                            obsoleteBookingsCount++;
+                        }
+                    }
+
+                    logger.LogInformation($"Found {obsoleteBookingsCount} obsolete bookings");
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred during the execution of the daily task.");
+            }
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            timer?.Dispose();
+            return Task.CompletedTask;
+        }
     }
 }

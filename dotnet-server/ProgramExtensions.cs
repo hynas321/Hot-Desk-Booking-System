@@ -31,7 +31,7 @@ public static class ProgramExtensions
 
     public static IServiceCollection AddHostedServices(this IServiceCollection services)
     {
-        services.AddScoped<DailyTaskService>();
+        services.AddHostedService<DailyTaskService>();
         return services;
     }
 }
