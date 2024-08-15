@@ -1,9 +1,9 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
 using Dotnet.Server.Http;
 using Dotnet.Server.Configuration;
-using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Dotnet.Server.Services;
+using Dotnet.Server.Helpers;
 
 namespace Dotnet.Server.Controllers;
 
@@ -11,431 +11,268 @@ namespace Dotnet.Server.Controllers;
 [Route("api/[controller]")]
 public class UserController : ControllerBase
 {
-    private readonly ILogger<UserController> logger;
-    private readonly IConfiguration configuration;
-    private readonly UserRepository userRepository;
-    private readonly DeskRepository deskRepository;
-    private readonly SessionTokenManager tokenManager;
-    private readonly HashManager hashManager;
+    private readonly ILogger<UserController> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IUserService _userService;
+    private readonly IDeskService _deskService;
+    private readonly ISessionTokenManager _tokenManager;
+    private readonly IHashManager _hashManager;
 
-    #nullable disable
     public UserController(
         ILogger<UserController> logger,
         IConfiguration configuration,
-        UserRepository userRepository,
-        DeskRepository deskRepository,
-        SessionTokenManager tokenManager,
-        HashManager hashManager
-    )
+        IUserService userService,
+        IDeskService deskService,
+        ISessionTokenManager tokenManager,
+        IHashManager hashManager)
     {
-        this.logger = logger;
-        this.configuration = configuration;
-        this.userRepository = userRepository;
-        this.deskRepository = deskRepository;
-        this.tokenManager = tokenManager;
-        this.hashManager = hashManager;
+        _logger = logger;
+        _configuration = configuration;
+        _userService = userService;
+        _deskService = deskService;
+        _tokenManager = tokenManager;
+        _hashManager = hashManager;
     }
-    #nullable enable
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("Add: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            if (token != configuration[Config.GlobalAdminToken])
-            {
-                string? username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogError("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                User? user = userRepository.GetUser(username);
-
-                if (user == null || user.IsAdmin == false)
-                {
-                    logger.LogError("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            bool userExists = userRepository.CheckIfUserExists(userCredentials.Username);
-
-            if (userExists)
-            {
-                logger.LogInformation("Add: Status 409, Conflict");
-                return StatusCode(StatusCodes.Status409Conflict);
-            }
-
-            UserCredentials hashedUserCredentials = new UserCredentials()
-            {
-                Username = userCredentials.Username,
-                Password = hashManager.HashPassword(userCredentials.Password)
-            };
-
-            userRepository.AddUser(hashedUserCredentials);
-
-            logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created);
+            return BadRequest("Invalid model state.");
         }
-        catch (Exception ex)
+
+        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Unauthorized("Unauthorized access.");
         }
+
+        if (await _userService.GetUserAsync(userCredentials.Username, cancellationToken) != null)
+        {
+            return Conflict("User already exists.");
+        }
+
+        var newUser = new User
+        {
+            UserName = userCredentials.Username,
+            Password = _hashManager.HashPassword(userCredentials.Password),
+            IsAdmin = false
+        };
+
+        await _userService.AddUserAsync(newUser, cancellationToken);
+        return CreatedAtAction(nameof(GetUserInfo), new { username = newUser.UserName }, newUser);
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] UserUsername userToRemove)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] string username, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("Remove: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            if (token != configuration[Config.GlobalAdminToken]) {
-                string? username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogError("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                User? user = userRepository.GetUser(username);
-
-                if (user == null || user.IsAdmin == false)
-                {
-                    logger.LogError("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            bool userExists = userRepository.CheckIfUserExists(userToRemove.Username);
-
-            if (!userExists)
-            {
-                logger.LogInformation("Remove: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            bool isUserRemoved = userRepository.RemoveUser(userToRemove.Username);
-
-            if (!isUserRemoved)
-            {
-                logger.LogInformation("Remove: 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            return BadRequest("Invalid model state.");
         }
-        catch (Exception ex)
+
+        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Unauthorized("Unauthorized access.");
         }
+
+        var existingUser = await _userService.GetUserAsync(username, cancellationToken);
+        if (existingUser == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        await _userService.RemoveUserAsync(existingUser.UserName, cancellationToken);
+        return Ok();
     }
 
     [HttpGet("GetBooking")]
-    public IActionResult GetBookedDeskInfo([FromHeader] string token)
+    public async Task<IActionResult> GetBookedDeskInfo([FromHeader] string token, CancellationToken cancellationToken = default)
     {
-        try
+        var username = _tokenManager.GetUsername(token);
+        if (username == null)
         {
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
-            {
-                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            User? user = userRepository.GetUser(username);
-
-            if (user == null)
-            {
-                logger.LogError("GetBookedDeskInfo: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            DeskInformation? bookingInfo = userRepository.GetBookedDeskInformation(username);
-
-            if (bookingInfo == null)
-            {
-                logger.LogInformation("GetBookedDeskInfo: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("GetBookedDeskInfo: Status 200, OK", JsonHelper.Serialize(bookingInfo));
-            return StatusCode(StatusCodes.Status200OK);
-
+            return Unauthorized("Unauthorized access.");
         }
-        catch (Exception ex)
+
+        var user = await _userService.GetUserAsync(username, cancellationToken);
+        if (user == null)
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Unauthorized("Unauthorized access.");
         }
+
+        var bookedDesk = user.Bookings.Select(b => b.Desk).FirstOrDefault();
+        if (bookedDesk == null)
+        {
+            return NotFound("No booked desk found.");
+        }
+
+        var bookingInfo = new DeskInformation
+        {
+            DeskName = bookedDesk.DeskName,
+            LocationName = bookedDesk.Location.LocationName
+        };
+
+        return Ok(bookingInfo);
     }
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
-        try
+        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("GetAll: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            List<User> users = await userRepository.GetAllUsersAsync();
-
-            logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, users);
-
+            return Unauthorized("Unauthorized access.");
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+
+        var users = await _userService.GetAllUsersAsync(cancellationToken);
+        return Ok(users);
     }
 
     [HttpGet("GetAllSessions")]
-    public IActionResult GetAllSessions([FromHeader] string globalAdminToken)
+    public IActionResult GetAllSessions([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
-        try
+        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogError("GetAllSessions: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            Dictionary<string, string> sessions = tokenManager.GetAllSessions();
-
-            logger.LogInformation("GetAllSessions: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, sessions);
-
+            return Unauthorized("Unauthorized access.");
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+
+        var sessions = _tokenManager.GetAllSessions();
+        return Ok(JsonHelper.Serialize(sessions));
     }
 
     [HttpPost("LogIn")]
-    public IActionResult LogIn([FromBody] UserCredentials userCredentials)
+    public async Task<IActionResult> LogIn([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("LogIn: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            User? user = userRepository.GetUser(userCredentials.Username);
-
-            if (user == null)
-            {
-                logger.LogInformation("LogIn: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            bool isPasswordCorrect = hashManager.VerifyPassword(userCredentials.Password, user.Password);
-
-            if (!isPasswordCorrect)
-            {
-                logger.LogError("LogIn: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            SessionTokenManager tokenManager = new SessionTokenManager();
-            string token = tokenManager.CreateToken(userCredentials.Username);
-            TokenOutput output = new TokenOutput
-            {
-                Token = token
-            };
-
-            logger.LogInformation("LogIn: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return BadRequest("Invalid model state.");
         }
-        catch (Exception ex)
+
+        var user = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
+        if (user == null)
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return NotFound("User not found.");
         }
+
+        if (!_hashManager.VerifyPassword(userCredentials.Password, user.Password))
+        {
+            return Unauthorized("Invalid credentials.");
+        }
+
+        var token = _tokenManager.CreateToken(userCredentials.Username);
+        var output = new TokenOutput { Token = token };
+        return Ok(JsonHelper.Serialize(output));
     }
 
     [HttpPut("LogOut")]
-    public IActionResult LogOut([FromHeader] string token)
+    public IActionResult LogOut([FromHeader] string token, CancellationToken cancellationToken = default)
     {
-        try
+        if (string.IsNullOrEmpty(token))
         {
-            if (token == null || token == "")
-            {
-                logger.LogError("LogOut: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            bool userLoggedOut = tokenManager.RemoveToken(token);
-
-            logger.LogInformation("LogOut: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, userLoggedOut);
+            return BadRequest("Token is required.");
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+
+        var userLoggedOut = _tokenManager.RemoveToken(token);
+        return Ok(userLoggedOut);
     }
 
     [HttpGet("IsAdmin/{username}")]
-    public IActionResult IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username)
+    public async Task<IActionResult> IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username, CancellationToken cancellationToken = default)
     {
-        try
+        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
-            {
-                logger.LogInformation("IsAdmin: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
-            }
-
-            User? user = userRepository.GetUser(username);
-
-            if (user == null)
-            {
-                logger.LogInformation("IsAdmin: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("IsAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, user.IsAdmin);
+            return Unauthorized("Unauthorized access.");
         }
-        catch (Exception ex)
+
+        var user = await _userService.GetUserAsync(username, cancellationToken);
+        if (user == null)
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return NotFound("User not found.");
         }
+
+        return Ok(user.IsAdmin);
     }
 
     [HttpGet("GetUserInfo")]
-    public IActionResult GetUserInfo([FromHeader] string token)
+    public async Task<IActionResult> GetUserInfo([FromHeader] string token, CancellationToken cancellationToken = default)
     {
-        try
+        var username = _tokenManager.GetUsername(token);
+        if (username == null)
         {
-            string? username = tokenManager.GetUsername(token);
-
-            if (username == null)
-            {
-                logger.LogError("IsAdmin: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            User? user = userRepository.GetUser(username);
-
-            if (user == null)
-            {
-                logger.LogError("IsAdmin: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            List<Desk> desks = deskRepository.GetAllDesks();
-            Desk? bookedDesk = desks.FirstOrDefault(d => d.Booking?.Username == username);
-            ClientsideDesk? clientsideDesk = null;
-            
-            if (bookedDesk != null)
-            {
-                #nullable disable
-                clientsideDesk = new ClientsideDesk()
-                {
-                    DeskName = bookedDesk.DeskName,
-                    IsEnabled = bookedDesk.IsEnabled,
-                    Username = username,
-                    StartTime = bookedDesk.Booking.StartTime.Value.ToString("dd-MM-yyyy"),
-                    EndTime = bookedDesk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
-                };
-                #nullable enable
-            }
-
-            UserInfoOutput output = new UserInfoOutput()
-            {
-                Username = user.Username,
-                IsAdmin = user.IsAdmin,
-                BookedDesk = clientsideDesk,
-                BookedDeskLocation = bookedDesk?.Location?.LocationName
-            };
-
-            logger.LogInformation("IsAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(output));
+            return NotFound("User not found.");
         }
-        catch (Exception ex)
+
+        var user = await _userService.GetUserAsync(username, cancellationToken);
+        if (user == null)
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return NotFound("User not found.");
         }
+
+        var bookedDesk = user.Bookings.Select(b => b.Desk).FirstOrDefault();
+        var deskDTO = bookedDesk != null ? new DeskDTO
+        {
+            DeskName = bookedDesk.DeskName,
+            IsEnabled = bookedDesk.IsEnabled,
+            Username = username,
+            StartTime = bookedDesk.Bookings.First().StartTime?.ToString("dd-MM-yyyy"),
+            EndTime = bookedDesk.Bookings.First().EndTime?.ToString("dd-MM-yyyy")
+        } : null;
+
+        var output = new UserInfoOutput
+        {
+            Username = user.UserName,
+            IsAdmin = user.IsAdmin,
+            BookedDesk = deskDTO,
+            BookedDeskLocation = bookedDesk?.Location?.LocationName
+        };
+
+        return Ok(JsonHelper.Serialize(output));
     }
 
     [HttpPut("SetAdmin")]
-    public IActionResult SetAdmin(
-        [FromHeader] string token,
-        [FromBody] UserAdminStatus userAdminStatus
-    )
+    public async Task<IActionResult> SetAdmin([FromHeader] string token, [FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("SetAdmin: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            if (token != configuration[Config.GlobalAdminToken]) {
-                string? username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogError("SetAdmin: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                User? user = userRepository.GetUser(username);
-
-                if (user == null || user.IsAdmin == false)
-                {
-                    logger.LogError("SetAdmin: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            bool statusSet = userRepository.SetAdminStatus(userAdminStatus.Username, userAdminStatus.IsAdmin);
-
-            if (!statusSet)
-            {
-                logger.LogInformation("SetAdmin: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("SetAdmin: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            return BadRequest("Invalid model state.");
         }
-        catch (Exception ex)
+
+        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Unauthorized("Unauthorized access.");
         }
+
+        var user = await _userService.GetUserAsync(userAdminStatus.Username, cancellationToken);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        user.IsAdmin = userAdminStatus.IsAdmin;
+        var statusSet = await _userService.UpdateUserAsync(user, cancellationToken);
+        if (!statusSet)
+        {
+            return NotFound("Failed to update user.");
+        }
+
+        _logger.LogInformation($"SetAdmin: {userAdminStatus.Username} IsAdmin - {userAdminStatus.IsAdmin}");
+        return Ok();
+    }
+
+    private async Task<bool> IsGlobalAdminOrAuthorized(string token, CancellationToken cancellationToken)
+    {
+        if (token == _configuration[Config.GlobalAdminToken])
+        {
+            return true;
+        }
+
+        var username = _tokenManager.GetUsername(token);
+        if (username == null)
+        {
+            return false;
+        }
+
+        var user = await _userService.GetUserAsync(username, cancellationToken);
+        return user != null && user.IsAdmin;
     }
 }

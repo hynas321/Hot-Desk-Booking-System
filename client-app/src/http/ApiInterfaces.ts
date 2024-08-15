@@ -20,10 +20,6 @@ export interface UserCredentials {
   password: string;
 }
 
-export interface UserUsername {
-  username: string;
-}
-
 export interface UserInfoOutput {
   username: string;
   isAdmin: boolean;
@@ -38,7 +34,7 @@ export interface TokenOutput {
 export interface DeskAvailabilityInformation {
   deskName: string;
   locationName: string;
-  isEnabled: boolean
+  isEnabled: boolean;
 }
 
 export interface DeskIsEnabled {

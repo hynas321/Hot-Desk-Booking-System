@@ -10,33 +10,41 @@ interface RangeProps {
   onChange: (value: number) => void;
 }
 
-function Range({title, suffix, minValue, maxValue, step, defaultValue, onChange}: RangeProps) {
+function Range({
+  title,
+  suffix,
+  minValue,
+  maxValue,
+  step,
+  defaultValue,
+  onChange,
+}: RangeProps) {
   const [value, setValue] = useState(defaultValue);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValue(parseInt(event.target.value));
-  }
+  };
 
   useEffect(() => {
     onChange(value);
   }, [value]);
-  
+
   return (
     <div className="d-flex align-items-center">
       <label className="form-label">{`${title}: ${value} ${suffix}`}</label>
       <div className="flex-grow-1">
-        <input 
-            className="form-range mx-2"
-            type="range"
-            value={value}
-            min={minValue}
-            max={maxValue}
-            step={step}
-            onChange={handleChange}
+        <input
+          className="form-range mx-2"
+          type="range"
+          value={value}
+          min={minValue}
+          max={maxValue}
+          step={step}
+          onChange={handleChange}
         />
       </div>
-  </div>
-  )
+    </div>
+  );
 }
 
 export default Range;

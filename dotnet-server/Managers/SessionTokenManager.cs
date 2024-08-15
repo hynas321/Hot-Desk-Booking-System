@@ -1,6 +1,6 @@
 namespace Dotnet.Server.Managers;
 
-public class SessionTokenManager
+public class SessionTokenManager : ISessionTokenManager
 {
     private static Dictionary<string, string> tokens = new Dictionary<string, string>();
 

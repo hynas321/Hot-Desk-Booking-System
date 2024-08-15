@@ -9,18 +9,22 @@ interface ButtonProps {
   onClick?: () => void;
 }
 
-function Button({text, active, spacing, type, icon, onClick}: ButtonProps) {
+function Button({ text, active, spacing, type, icon, onClick }: ButtonProps) {
   return (
     <>
-      <button 
+      <button
         className={
-          active ?
-          `btn btn-${type === undefined ? "primary" : type} mx-${spacing}` :
-          `btn btn-${type === undefined ? "primary" : type} mx-${spacing} disabled`
-        } 
+          active
+            ? `btn btn-${type === undefined ? "primary" : type} mx-${spacing}`
+            : `btn btn-${
+                type === undefined ? "primary" : type
+              } mx-${spacing} disabled`
+        }
         onClick={onClick}
-      > 
-        <span>{icon} {text}</span> 
+      >
+        <span>
+          {icon} {text}
+        </span>
       </button>
     </>
   );

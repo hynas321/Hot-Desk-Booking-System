@@ -1,23 +1,23 @@
 class ApiEndpoints {
   //UserController
-  static logIn: string = "/api/User/LogIn";
-  static logOut: string = "/api/User/LogOut";
-  static getUserInfo: string = "/api/User/GetUserInfo";
+  static readonly logIn: string = "/api/User/LogIn";
+  static readonly logOut: string = "/api/User/LogOut";
+  static readonly getUserInfo: string = "/api/User/GetUserInfo";
 
   //LocationController
-  static addLocation: string = "/api/Location/Add";
-  static removeLocation: string = "/api/Location/Remove";
-  static getAllLocationNames: string = "/api/Location/GetAllNames";
-  static getDesks: string = "/api/Location/GetDesks";
+  static readonly addLocation: string = "/api/Location/Add";
+  static readonly removeLocation: string = "/api/Location/Remove";
+  static readonly getAllLocationNames: string = "/api/Location/GetAllNames";
+  static readonly getDesks: string = "/api/Location/GetDesks";
 
   //DeskController
-  static addDesk: string = "/api/Desk/Add";
-  static removeDesk: string = "/api/Desk/Remove";
-  static setDeskAvailability: string = "/api/Desk/SetDeskAvailability";
+  static readonly addDesk: string = "/api/Desk/Add";
+  static readonly removeDesk: string = "/api/Desk/Remove";
+  static readonly setDeskAvailability: string = "/api/Desk/SetDeskAvailability";
 
   //BookingController
-  static bookDesk: string = "/api/Booking/Book";
-  static unbookDesk: string = "/api/Booking/Unbook";
+  static readonly bookDesk: string = "/api/Booking/Book";
+  static readonly unbookDesk: string = "/api/Booking/Unbook";
 }
-  
-  export default ApiEndpoints;
+
+export default ApiEndpoints;

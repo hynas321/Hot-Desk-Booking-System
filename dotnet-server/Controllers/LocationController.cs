@@ -1,9 +1,9 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Dotnet.Server.Configuration;
+using Dotnet.Server.Services;
 
 namespace Dotnet.Server.Controllers;
 
@@ -11,262 +11,179 @@ namespace Dotnet.Server.Controllers;
 [Route("api/[controller]")]
 public class LocationController : ControllerBase
 {
-    private readonly ILogger<LocationController> logger;
-    private readonly IConfiguration configuration;
-    private readonly UserRepository userRepository;
-    private readonly LocationRepository locationRepository;
-    private readonly SessionTokenManager tokenManager;
+    private readonly ILogger<LocationController> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IUserService _userService;
+    private readonly ILocationService _locationService;
+    private readonly ISessionTokenManager _tokenManager;
 
     public LocationController(
         ILogger<LocationController> logger,
         IConfiguration configuration,
-        UserRepository userRepository,
-        LocationRepository locationRepository,
-        SessionTokenManager tokenManager
+        IUserService userService,
+        ILocationService locationService,
+        ISessionTokenManager tokenManager
     )
     {
-        this.logger = logger;
-        this.configuration = configuration;
-        this.userRepository = userRepository;
-        this.locationRepository = locationRepository;
-        this.tokenManager = tokenManager;
+        _logger = logger;
+        _configuration = configuration;
+        _userService = userService;
+        _locationService = locationService;
+        _tokenManager = tokenManager;
     }
 
     [HttpPost("Add")]
-    public IActionResult Add([FromHeader] string token, [FromBody] LocationName locationName)
+    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] LocationName locationName, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("Add: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            if (token != configuration[Config.GlobalAdminToken])
-            {
-                string? username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogInformation("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                User? user = userRepository.GetUser(username);
-
-                if (user == null || user.IsAdmin == false)
-                {
-                    logger.LogError("Add: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
-
-            if (locationExists)
-            {
-                logger.LogInformation("Add: Status 409, Conflict");
-                return StatusCode(StatusCodes.Status409Conflict);
-            }
-
-            locationRepository.AddLocation(locationName.Name);
-
-            logger.LogInformation("Add: Status 201, Created");
-            return StatusCode(StatusCodes.Status201Created);
+            _logger.LogError("Add: Status 400, Bad Request");
+            return BadRequest();
         }
-        catch (Exception ex)
+
+        if (!await IsAuthorizedAdminAsync(token, cancellationToken))
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Unauthorized();
         }
+
+        if (await _locationService.GetLocationAsync(locationName.Name, cancellationToken) != null)
+        {
+            _logger.LogInformation("Add: Status 409, Conflict");
+            return Conflict();
+        }
+
+        var location = new Location
+        {
+            LocationName = locationName.Name,
+            Desks = new List<Desk>()
+        };
+
+        await _locationService.AddLocationAsync(location, cancellationToken);
+
+        _logger.LogInformation("Add: Status 201, Created");
+        return CreatedAtAction(nameof(Add), new { locationName = location.LocationName });
     }
 
     [HttpDelete("Remove")]
-    public IActionResult Remove([FromHeader] string token, [FromBody] LocationName locationName)
+    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] LocationName locationName, CancellationToken cancellationToken = default)
     {
-        try
+        if (!ModelState.IsValid)
         {
-            if (!ModelState.IsValid)
-            {
-                logger.LogError("Remove: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
-            }
-
-            if (token != configuration[Config.GlobalAdminToken])
-            {
-                string? username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogInformation("Remove: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                User? user = userRepository.GetUser(username);
-
-                if (user == null || user.IsAdmin == false)
-                {
-                    logger.LogError("Remove: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            bool locationExists = locationRepository.CheckIfLocationExists(locationName.Name);
-
-            if (!locationExists)
-            {
-                logger.LogInformation("Remove: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            bool isLocationRemoved = locationRepository.RemoveLocation(locationName.Name);
-
-            if (!isLocationRemoved)
-            {
-                logger.LogInformation("Remove: Status 500, Internal server error");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            logger.LogInformation("Remove: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK);
+            _logger.LogError("Remove: Status 400, Bad Request");
+            return BadRequest();
         }
-        catch (Exception ex)
+
+        if (!await IsAuthorizedAdminAsync(token, cancellationToken))
         {
-            logger.LogError(ex.ToString());
+            return Unauthorized();
+        }
+
+        var location = await _locationService.GetLocationAsync(locationName.Name, cancellationToken);
+        if (location == null)
+        {
+            _logger.LogInformation("Remove: Status 404, Not Found");
+            return NotFound();
+        }
+
+        bool isRemoved = await _locationService.RemoveLocationAsync(location.LocationName, cancellationToken);
+        if (!isRemoved)
+        {
+            _logger.LogError("Remove: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
+
+        _logger.LogInformation("Remove: Status 200, OK");
+        return Ok();
     }
 
     [HttpGet("GetDesks/{locationName}")]
-    public IActionResult GetDesks([FromHeader] string token, [FromRoute] string locationName)
+    public async Task<IActionResult> GetDesks([FromHeader] string token, [FromRoute] string locationName, CancellationToken cancellationToken = default)
     {
-        try
+        var location = await _locationService.GetLocationAsync(locationName, cancellationToken);
+        if (location == null)
         {
-            Location? location = locationRepository.GetLocation(locationName);
-            List<ClientsideDesk> clientsideDesks = new List<ClientsideDesk>();
-            string? username = null;
-            User? user = null;
-
-            if (token != configuration[Config.GlobalAdminToken])
-            {
-                username = tokenManager.GetUsername(token);
-
-                if (username == null)
-                {
-                    logger.LogInformation("GetDesks: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-
-                user = userRepository.GetUser(username);
-
-                if (user == null)
-                {
-                    logger.LogError("GetDesks: Status 401, Unauthorized");
-                    return StatusCode(StatusCodes.Status401Unauthorized);
-                }
-            }
-
-            if (location == null)
-            {
-                logger.LogInformation("GetDesks: Status 404, Not Found");
-                return StatusCode(StatusCodes.Status404NotFound);
-            }
-
-            foreach (var desk in location.Desks)
-            {
-                #nullable disable
-
-                string usernameProperty = "-";
-
-                if (user.IsAdmin == true || desk?.Booking?.Username == username) {
-                    usernameProperty = desk.Booking?.Username;
-                }
-                else {
-                    usernameProperty = desk.Booking?.Username == null ? null : "-";
-                }
-
-                clientsideDesks.Add(
-                    new ClientsideDesk()
-                    {
-                        DeskName = desk.DeskName,
-                        IsEnabled = desk.IsEnabled,
-                        Username = usernameProperty,
-                        StartTime =
-                            desk.Booking.StartTime.HasValue ?
-                            desk.Booking.StartTime.Value.ToString("dd-MM-yyyy")
-                            : null,
-                        EndTime =
-                            desk.Booking.EndTime.HasValue ?
-                            desk.Booking.EndTime.Value.ToString("dd-MM-yyyy")
-                            : null
-                    }
-                );
-            }
-
-            logger.LogInformation("GetDesks: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesks));
+            _logger.LogInformation("GetDesks: Status 404, Not Found");
+            return NotFound();
         }
-        catch (Exception ex)
+
+        var username = token != _configuration[Config.GlobalAdminToken]
+            ? await GetUsernameFromTokenAsync(token, cancellationToken)
+            : null;
+
+        var user = username != null ? await _userService.GetUserAsync(username, cancellationToken) : null;
+
+        if (user == null && username != null)
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            _logger.LogWarning($"GetDesks: Could not find user with username {username}");
         }
+
+        var desksDTO = location.Desks.Select(d =>
+        {
+            var relevantBooking = d.Bookings.FirstOrDefault();
+
+            return new DeskDTO
+            {
+                DeskName = d.DeskName,
+                IsEnabled = d.IsEnabled,
+                Username = relevantBooking?.User.UserName,
+                StartTime = relevantBooking?.StartTime?.ToString("dd-MM-yyyy") ?? "-",
+                EndTime = relevantBooking?.EndTime?.ToString("dd-MM-yyyy") ?? "-"
+            };
+        }).ToList();
+
+        _logger.LogInformation("GetDesks: Status 200, OK");
+        return Ok(JsonHelper.Serialize(desksDTO));
     }
 
     [HttpGet("GetAllNames")]
-    public async Task<IActionResult> GetAllNames()
+    public async Task<IActionResult> GetAllNames(CancellationToken cancellationToken = default)
     {
-        try
-        {
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
-            List<ClientsideLocation> clientsideLocations = new List<ClientsideLocation>();
-            
-            foreach(var location in locations)
-            {
-                clientsideLocations.Add(
-                    new ClientsideLocation()
-                    {
-                        LocationName = location.LocationName,
-                        TotalDeskCount = location.Desks.Count,
-                        AvailableDeskCount =
-                            location.Desks.Where(x => x.Booking?.Username == null && x.IsEnabled).Count()
-                    }
-                );
-            }
+        var locations = await _locationService.GetAllLocationsAsync(cancellationToken);
 
-            logger.LogInformation("GetAllNames: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideLocations));
-
-        }
-        catch (Exception ex)
+        var locationDTO = locations.Select(loc => new LocationDTO
         {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+            LocationName = loc.LocationName,
+            TotalDeskCount = loc.Desks.Count,
+            AvailableDeskCount = loc.Desks.Count(d => !d.Bookings.Any() && d.IsEnabled)
+        }).ToList();
+
+        _logger.LogInformation("GetAllNames: Status 200, OK");
+        return Ok(JsonHelper.Serialize(locationDTO));
     }
 
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken)
+    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
     {
-        try
+        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
         {
-            if (globalAdminToken != configuration[Config.GlobalAdminToken])
+            _logger.LogError("GetAll: Status 401, Unauthorized");
+            return Unauthorized();
+        }
+
+        var locations = await _locationService.GetAllLocationsAsync(cancellationToken);
+
+        _logger.LogInformation("GetAll: Status 200, OK");
+        return Ok(JsonHelper.Serialize(locations));
+    }
+
+    private async Task<bool> IsAuthorizedAdminAsync(string token, CancellationToken cancellationToken)
+    {
+        if (token != _configuration[Config.GlobalAdminToken])
+        {
+            var username = await GetUsernameFromTokenAsync(token, cancellationToken);
+            if (username == null)
             {
-                logger.LogError("GetAll: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                return false;
             }
 
-            List<Location> locations = await locationRepository.GetAllLocationsAsync();
-
-            logger.LogInformation("GetAll: Status 200, OK");
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(locations));
-
+            var user = await _userService.GetUserAsync(username, cancellationToken);
+            return user?.IsAdmin == true;
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
+        return true;
+    }
+
+    private async Task<string?> GetUsernameFromTokenAsync(string token, CancellationToken cancellationToken)
+    {
+        return await Task.FromResult(_tokenManager.GetUsername(token));
     }
 }

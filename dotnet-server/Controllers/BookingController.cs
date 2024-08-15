@@ -1,124 +1,106 @@
 using Dotnet.Server.Managers;
-using Dotnet.Server.Database;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
+using Dotnet.Server.Services;
 
-namespace Dotnet.Server.Controllers;
-
-[ApiController]
-[Route("api/[controller]")]
-public class BookingController : ControllerBase
+namespace Dotnet.Server.Controllers
 {
-    private readonly ILogger<BookingController> logger;
-    private readonly DeskRepository deskRepository;
-    private readonly BookingRepository bookingRepository;
-    private readonly SessionTokenManager tokenManager;
-
-    public BookingController(
-        ILogger<BookingController> logger,
-        DeskRepository deskRepository,
-        BookingRepository bookingRepository,
-        SessionTokenManager tokenManager
-    )
+    [ApiController]
+    [Route("api/[controller]")]
+    public class BookingController : ControllerBase
     {
-        this.logger = logger;
-        this.deskRepository = deskRepository;
-        this.bookingRepository = bookingRepository;
-        this.tokenManager = tokenManager;
-    }
+        private readonly ILogger<BookingController> _logger;
+        private readonly IDeskService _deskService;
+        private readonly IUserService _userService;
+        private readonly IBookingService _bookingService;
+        private readonly ISessionTokenManager _tokenManager;
 
-    [HttpPut("Book")]
-    public IActionResult Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo)
-    {
-        try
+        public BookingController(
+            ILogger<BookingController> logger,
+            IDeskService deskService,
+            IUserService userService,
+            IBookingService bookingService,
+            ISessionTokenManager tokenManager
+        )
+        {
+            _logger = logger;
+            _deskService = deskService;
+            _userService = userService;
+            _bookingService = bookingService;
+            _tokenManager = tokenManager;
+        }
+
+        [HttpPut("Book")]
+        public async Task<IActionResult> Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Book: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
+                _logger.LogError("Book: Status 400, Bad Request");
+                return BadRequest();
             }
 
-            string? username = tokenManager.GetUsername(token);
-
+            var username = _tokenManager.GetUsername(token);
             if (username == null)
             {
-                logger.LogInformation("Book: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                _logger.LogInformation("Book: Status 401, Unauthorized");
+                return Unauthorized();
             }
 
-            DeskInformation deskInfo = new DeskInformation()
+            var deskInformation = new DeskInformation { DeskName = bookingInfo.DeskName, LocationName = bookingInfo.LocationName };
+            var desk = await _deskService.GetDeskAsync(deskInformation, cancellationToken);
+            if (desk == null)
             {
-                DeskName = bookingInfo.DeskName,
-                LocationName = bookingInfo.LocationName
-            };
-
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
-
-            if (!deskExists)
-            {
-                logger.LogInformation("Book: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                return NotFound();
             }
 
-            ClientsideDesk? clientsideDesk = bookingRepository.BookDesk(username, bookingInfo);
-
-            if (clientsideDesk == null)
+            var user = await _userService.GetUserAsync(username, cancellationToken);
+            if (user == null)
             {
-                logger.LogInformation("Book: Status 500, Internal server error");
+                _logger.LogInformation("Book: Status 401, Unauthorized");
+                return Unauthorized();
+            }
+
+            var deskDTO = await _bookingService.AddBookingAsync(user, bookingInfo, cancellationToken);
+            if (deskDTO == null)
+            {
+                _logger.LogInformation("Book: Status 500, Internal Server Error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesk));
+            return Ok(JsonHelper.Serialize(deskDTO));
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
-        }
-    }
 
-    [HttpPut("Unbook")]
-    public IActionResult Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo)
-    {
-        try
+        [HttpPut("Unbook")]
+        public async Task<IActionResult> Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
-                logger.LogError("Unbook: Status 400, Bad Request");
-                return StatusCode(StatusCodes.Status400BadRequest);
+                _logger.LogError("Unbook: Status 400, Bad Request");
+                return BadRequest();
             }
 
-            string? username = tokenManager.GetUsername(token);
-
+            var username = _tokenManager.GetUsername(token);
             if (username == null)
             {
-                logger.LogInformation("Unbook: Status 401, Unauthorized");
-                return StatusCode(StatusCodes.Status401Unauthorized);
+                _logger.LogInformation("Unbook: Status 401, Unauthorized");
+                return Unauthorized();
             }
 
-            bool deskExists = deskRepository.CheckIfDeskExists(deskInfo);
-
-            if (!deskExists)
+            var desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
+            if (desk == null)
             {
-                logger.LogInformation("Unbook: Status 404, Not found");
-                return StatusCode(StatusCodes.Status404NotFound);
+                return NotFound();
             }
 
-            ClientsideDesk? clientsideDesk = bookingRepository.UnbookDesk(deskInfo);
-
-            if (clientsideDesk == null)
+            var deskDTO = await _bookingService.RemoveBookingAsync(deskInfo, cancellationToken);
+            if (deskDTO == null)
             {
-                logger.LogInformation("Unbook: Status 500, Internal server error");
+                _logger.LogInformation("Unbook: Status 500, Internal Server Error");
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
-            return StatusCode(StatusCodes.Status200OK, JsonHelper.Serialize(clientsideDesk));
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex.ToString());
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            return Ok(JsonHelper.Serialize(deskDTO));
         }
     }
 }

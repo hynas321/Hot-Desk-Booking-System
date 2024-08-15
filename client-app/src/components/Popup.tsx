@@ -11,41 +11,41 @@ interface PopupProps {
   onClose: () => void;
 }
 
-function Popup({title, inputFormPlaceholderText, visible, onSubmit, onClose}: PopupProps) {
+function Popup({
+  title,
+  inputFormPlaceholderText,
+  visible,
+  onSubmit,
+  onClose,
+}: PopupProps) {
   const customStyles = {
     content: {
-      top: '25%',
-      left: '50%',
-      right: 'auto',
-      bottom: 'auto',
-      transform: 'translate(-50%, -50%)',
-      width: '350px'
+      top: "25%",
+      left: "50%",
+      right: "auto",
+      bottom: "auto",
+      transform: "translate(-50%, -50%)",
+      width: "350px",
     },
   };
-  
+
   const [inputFormValue, setInputFormValue] = useState("");
   const [joinLobbyActiveButton, setJoinLobbyActiveButton] = useState(false);
-  
+
   const handleInputFormChange = (value: string) => {
     setInputFormValue(value);
-  }
+  };
 
   useEffect(() => {
     if (inputFormValue.length !== 0) {
       setJoinLobbyActiveButton(true);
-    }
-    else {
+    } else {
       setJoinLobbyActiveButton(false);
     }
+  }, [inputFormValue]);
 
-  }, [inputFormValue])
-  
   return (
-    <Modal
-      isOpen={visible}
-      style={customStyles}
-      ariaHideApp={false}
-    >
+    <Modal isOpen={visible} style={customStyles} ariaHideApp={false}>
       <div className="container">
         <h5>{title}</h5>
         <TextForm
@@ -54,14 +54,14 @@ function Popup({title, inputFormPlaceholderText, visible, onSubmit, onClose}: Po
           onChange={handleInputFormChange}
         />
         <div className="d-flex justify-content-end mt-2">
-          <Button 
+          <Button
             text={"Cancel"}
             active={true}
             spacing={1}
             type={"danger"}
             onClick={onClose}
           />
-          <Button 
+          <Button
             text={"Submit"}
             active={joinLobbyActiveButton}
             spacing={1}
@@ -71,7 +71,7 @@ function Popup({title, inputFormPlaceholderText, visible, onSubmit, onClose}: Po
         </div>
       </div>
     </Modal>
-  )
+  );
 }
 
 export default Popup;

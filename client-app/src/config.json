@@ -1,6 +1,6 @@
 {
-    "httpServerURL": "http://127.0.0.1:5062",
-    "mainViewClientEndpoint": "/",
-    "locationsViewClientEndpoint": "/locations",
-    "desksViewClientEndpoint": "/desks"
+  "httpServerURL": "http://127.0.0.1:5062",
+  "mainViewClientEndpoint": "/",
+  "locationsViewClientEndpoint": "/locations",
+  "desksViewClientEndpoint": "/desks"
 }
