@@ -50,11 +50,7 @@ export default function DeskList({
             <li
               key={index}
               className={`list-group-item 
-                ${
-                  desk.username === null && desk.isEnabled
-                    ? "bg-white"
-                    : "bg-light"
-                }`}
+                ${desk.username === null && desk.isEnabled ? "bg-white" : "bg-light"}`}
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
@@ -63,9 +59,7 @@ export default function DeskList({
               </div>
               <div
                 className={`d-flex ${
-                  desk.username === null && desk.isEnabled
-                    ? "text-success"
-                    : "text-danger"
+                  desk.username === null && desk.isEnabled ? "text-success" : "text-danger"
                 }`}
               >
                 {desk.username === null && desk.isEnabled && <>{"Available"}</>}
@@ -77,8 +71,8 @@ export default function DeskList({
                       {"until the end of\u00A0"} <b>{desk.endTime}</b>
                     </span>
                     <span className="d-lg-block d-md-block d-none">
-                      {"Booked from\u00A0"} <b>{desk.startTime}</b>{" "}
-                      {"\u00A0until the end of\u00A0"} <b>{desk.endTime}</b>
+                      {"Booked from\u00A0"} <b>{desk.startTime}</b> {"\u00A0until the end of\u00A0"}{" "}
+                      <b>{desk.endTime}</b>
                     </span>
                   </>
                 )}
@@ -102,11 +96,7 @@ export default function DeskList({
                 ) : (
                   <Button
                     text="Book desk"
-                    active={
-                      desk.username === null &&
-                      desk.isEnabled &&
-                      user.bookedDesk === null
-                    }
+                    active={desk.username === null && desk.isEnabled && user.bookedDesk === null}
                     spacing={0}
                     type="primary"
                     onClick={() => onBookClick(desk.deskName)}

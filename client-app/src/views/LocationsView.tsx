@@ -22,7 +22,6 @@ export default function LocationsView() {
   const apiRequestHandler = ApiRequestHandler.getInstance();
   const alertManager = new AlertManager();
 
-  // eslint-disable-next-line
   useEffect(() => {
     const fetchLocationsAsync = async () => {
       const fetchedLocations = await apiRequestHandler.getAllLocationNames(token);

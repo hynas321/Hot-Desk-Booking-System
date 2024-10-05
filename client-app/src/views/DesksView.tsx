@@ -38,10 +38,7 @@ export default function DesksView() {
     }
 
     const fetchDesksAsync = async () => {
-      const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(
-        token,
-        locationName
-      );
+      const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(token, locationName);
 
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
@@ -72,10 +69,7 @@ export default function DesksView() {
     );
 
     if (bookedDesk.deskName === undefined || !bookedDesk) {
-      alertManager.displayAlert(
-        `Could not book the desk: ${deskName}`,
-        "danger"
-      );
+      alertManager.displayAlert(`Could not book the desk: ${deskName}`, "danger");
       return;
     }
 
@@ -90,17 +84,10 @@ export default function DesksView() {
   };
 
   const handleUnbookButtonClick = async (deskName: string) => {
-    const unbookedDesk: Desk = await apiRequestHandler.unbookDesk(
-      token,
-      deskName,
-      locationName
-    );
+    const unbookedDesk: Desk = await apiRequestHandler.unbookDesk(token, deskName, locationName);
 
     if (unbookedDesk.deskName === undefined || !unbookedDesk) {
-      alertManager.displayAlert(
-        `Could not unbook the desk: ${deskName}`,
-        "danger"
-      );
+      alertManager.displayAlert(`Could not unbook the desk: ${deskName}`, "danger");
       return;
     }
 
@@ -123,10 +110,7 @@ export default function DesksView() {
       );
 
       if (removeDeskStatusCode !== 200) {
-        alertManager.displayAlert(
-          `Could not remove the desk: ${deskName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not remove the desk: ${deskName}`, "danger");
         return;
       }
 
@@ -147,10 +131,7 @@ export default function DesksView() {
       );
 
       if (returnedDesk.deskName === undefined || !returnedDesk) {
-        alertManager.displayAlert(
-          `Could not enable the desk: ${deskName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not enable the desk: ${deskName}`, "danger");
         return;
       }
 
@@ -174,10 +155,7 @@ export default function DesksView() {
       );
 
       if (returnedDesk.deskName === undefined || !returnedDesk) {
-        alertManager.displayAlert(
-          `Could not disable the desk: ${deskName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not disable the desk: ${deskName}`, "danger");
         return;
       }
 
@@ -193,18 +171,11 @@ export default function DesksView() {
 
   const handlePopupSubmit = async (deskName: string) => {
     try {
-      const addDeskStatusCode = await apiRequestHandler.addDesk(
-        token,
-        deskName,
-        locationName
-      );
+      const addDeskStatusCode = await apiRequestHandler.addDesk(token, deskName, locationName);
       setIsPopupVisible(false);
 
       if (addDeskStatusCode !== 201) {
-        alertManager.displayAlert(
-          `Could not add the desk: ${deskName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not add the desk: ${deskName}`, "danger");
         return;
       }
 

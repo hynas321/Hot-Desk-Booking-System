@@ -16,9 +16,7 @@ function Button({ text, active, spacing, type, icon, onClick }: ButtonProps) {
         className={
           active
             ? `btn btn-${type === undefined ? "primary" : type} mx-${spacing}`
-            : `btn btn-${
-                type === undefined ? "primary" : type
-              } mx-${spacing} disabled`
+            : `btn btn-${type === undefined ? "primary" : type} mx-${spacing} disabled`
         }
         onClick={onClick}
       >

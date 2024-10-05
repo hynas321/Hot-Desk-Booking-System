@@ -11,13 +11,7 @@ interface PopupProps {
   onClose: () => void;
 }
 
-function Popup({
-  title,
-  inputFormPlaceholderText,
-  visible,
-  onSubmit,
-  onClose,
-}: PopupProps) {
+function Popup({ title, inputFormPlaceholderText, visible, onSubmit, onClose }: PopupProps) {
   const customStyles = {
     content: {
       top: "25%",
@@ -54,13 +48,7 @@ function Popup({
           onChange={handleInputFormChange}
         />
         <div className="d-flex justify-content-end mt-2">
-          <Button
-            text={"Cancel"}
-            active={true}
-            spacing={1}
-            type={"danger"}
-            onClick={onClose}
-          />
+          <Button text={"Cancel"} active={true} spacing={1} type={"danger"} onClick={onClose} />
           <Button
             text={"Submit"}
             active={joinLobbyActiveButton}

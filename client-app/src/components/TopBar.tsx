@@ -33,9 +33,7 @@ export default function TopBar({ isUserInfoVisible }: TopBarProps) {
     }
 
     const getUserInfo = async () => {
-      const userInfo: UserInfoOutput = await apiRequestHandler.getUserInfo(
-        token
-      );
+      const userInfo: UserInfoOutput = await apiRequestHandler.getUserInfo(token);
 
       if (!userInfo) {
         dispatch(updatedUsername("User"));
@@ -97,9 +95,7 @@ export default function TopBar({ isUserInfoVisible }: TopBarProps) {
           </h5>
           {user.bookedDesk && (
             <h6>
-              <span className="d-block text-primary mb-1">
-                {"Current booking"}
-              </span>
+              <span className="d-block text-primary mb-1">{"Current booking"}</span>
               <span className="d-block text-primary">
                 {`${user.bookedDesk.deskName} in ${user.bookedDeskLocation} until ${user.bookedDesk.endTime}`}
               </span>

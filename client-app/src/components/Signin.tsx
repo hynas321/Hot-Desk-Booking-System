@@ -33,10 +33,7 @@ export default function Signin() {
       const tokenObj: any = await apiRequestHandler.logIn(username, password);
 
       if (typeof tokenObj.token !== "string") {
-        alertManager.displayAlert(
-          "Could not log in, check your username or password",
-          "danger"
-        );
+        alertManager.displayAlert("Could not log in, check your username or password", "danger");
         return;
       }
 
@@ -83,9 +80,7 @@ export default function Signin() {
       <div className="card mt-4">
         <div className="card-body">
           {"If you do not have your credentials, please ask the supervisor"}
-          <div className="text-secondary">
-            {"Available in the README.md file :)"}
-          </div>
+          <div className="text-secondary">{"Available in the README.md file :)"}</div>
         </div>
       </div>
     </div>

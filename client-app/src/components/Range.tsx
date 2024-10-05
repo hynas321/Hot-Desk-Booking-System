@@ -10,15 +10,7 @@ interface RangeProps {
   onChange: (value: number) => void;
 }
 
-function Range({
-  title,
-  suffix,
-  minValue,
-  maxValue,
-  step,
-  defaultValue,
-  onChange,
-}: RangeProps) {
+function Range({ title, suffix, minValue, maxValue, step, defaultValue, onChange }: RangeProps) {
   const [value, setValue] = useState(defaultValue);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
