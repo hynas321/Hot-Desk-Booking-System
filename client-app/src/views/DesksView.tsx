@@ -6,7 +6,6 @@ import Popup from "../components/Popup";
 import { useLocation, useNavigate } from "react-router-dom";
 import config from "./../config.json";
 import TopBar from "../components/TopBar";
-import useLocalStorageState from "use-local-storage-state";
 import { useAppSelector } from "../components/redux/hooks";
 import { AlertManager } from "../managers/AlertManager";
 import { useDispatch } from "react-redux";
@@ -21,7 +20,6 @@ export default function DesksView() {
   const [isPopupVisible, setIsPopupVisible] = useState<boolean>(false);
   const [isDeskListVisible, setIsDeskListVisible] = useState<boolean>(false);
   const [bookingDays, setBookingDays] = useState<number>(1);
-  const [token] = useLocalStorageState("token", { defaultValue: "" });
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,14 +29,13 @@ export default function DesksView() {
   const apiRequestHandler = ApiRequestHandler.getInstance();
   const alertManager: AlertManager = new AlertManager();
 
-  // eslint-disable-next-line
   useEffect(() => {
     if (locationName === undefined) {
       navigate(config.locationsViewClientEndpoint);
     }
 
     const fetchDesksAsync = async () => {
-      const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(token, locationName);
+      const fetchedDesks: Desk[] = await apiRequestHandler.getDesks(locationName);
 
       if (!Array.isArray(fetchedDesks)) {
         alertManager.displayAlert("Could not load desks", "danger");
@@ -61,12 +58,7 @@ export default function DesksView() {
   };
 
   const handleBookButtonClick = async (deskName: string) => {
-    const bookedDesk: Desk = await apiRequestHandler.bookDesk(
-      token,
-      deskName,
-      locationName,
-      bookingDays
-    );
+    const bookedDesk: Desk = await apiRequestHandler.bookDesk(deskName, locationName, bookingDays);
 
     if (bookedDesk.deskName === undefined || !bookedDesk) {
       alertManager.displayAlert(`Could not book the desk: ${deskName}`, "danger");
@@ -84,7 +76,7 @@ export default function DesksView() {
   };
 
   const handleUnbookButtonClick = async (deskName: string) => {
-    const unbookedDesk: Desk = await apiRequestHandler.unbookDesk(token, deskName, locationName);
+    const unbookedDesk: Desk = await apiRequestHandler.unbookDesk(deskName, locationName);
 
     if (unbookedDesk.deskName === undefined || !unbookedDesk) {
       alertManager.displayAlert(`Could not unbook the desk: ${deskName}`, "danger");
@@ -103,11 +95,7 @@ export default function DesksView() {
 
   const handleRemoveButtonClick = async (deskName: string) => {
     try {
-      const removeDeskStatusCode = await apiRequestHandler.removeDesk(
-        token,
-        deskName,
-        locationName
-      );
+      const removeDeskStatusCode = await apiRequestHandler.removeDesk(deskName, locationName);
 
       if (removeDeskStatusCode !== 200) {
         alertManager.displayAlert(`Could not remove the desk: ${deskName}`, "danger");
@@ -124,7 +112,6 @@ export default function DesksView() {
   const handleEnableButtonClick = async (deskName: string) => {
     try {
       const returnedDesk: Desk = await apiRequestHandler.setDeskAvailability(
-        token,
         deskName,
         locationName,
         true
@@ -148,7 +135,6 @@ export default function DesksView() {
   const handleDisableButtonClick = async (deskName: string) => {
     try {
       const returnedDesk: Desk = await apiRequestHandler.setDeskAvailability(
-        token,
         deskName,
         locationName,
         false
@@ -171,7 +157,7 @@ export default function DesksView() {
 
   const handlePopupSubmit = async (deskName: string) => {
     try {
-      const addDeskStatusCode = await apiRequestHandler.addDesk(token, deskName, locationName);
+      const addDeskStatusCode = await apiRequestHandler.addDesk(deskName, locationName);
       setIsPopupVisible(false);
 
       if (addDeskStatusCode !== 201) {

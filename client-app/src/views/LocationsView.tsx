@@ -5,7 +5,6 @@ import config from "./../config.json";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Popup from "../components/Popup";
-import useLocalStorageState from "use-local-storage-state";
 import TopBar from "../components/TopBar";
 import { useAppSelector } from "../components/redux/hooks";
 import { AlertManager } from "../managers/AlertManager";
@@ -15,7 +14,6 @@ export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [isAddLocationPopupVisible, setIsLocationPopupVisible] = useState<boolean>(false);
   const [isLocationListVisible, setIsLocationListVisible] = useState<boolean>(false);
-  const [token] = useLocalStorageState("token", { defaultValue: "" });
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user);
 
@@ -24,7 +22,7 @@ export default function LocationsView() {
 
   useEffect(() => {
     const fetchLocationsAsync = async () => {
-      const fetchedLocations = await apiRequestHandler.getAllLocationNames(token);
+      const fetchedLocations = await apiRequestHandler.getAllLocationNames();
 
       if (!Array.isArray(fetchedLocations)) {
         alertManager.displayAlert("Could not load locations", "danger");
@@ -54,7 +52,7 @@ export default function LocationsView() {
 
   const handleRemoveButtonClick = async (locationName: string) => {
     try {
-      const removeLocationStatusCode = await apiRequestHandler.removeLocation(token, locationName);
+      const removeLocationStatusCode = await apiRequestHandler.removeLocation(locationName);
 
       if (removeLocationStatusCode !== 200) {
         alertManager.displayAlert(`Could not remove the location ${locationName}`, "danger");
@@ -72,7 +70,7 @@ export default function LocationsView() {
 
   const handlePopupSubmit = async (locationName: string) => {
     try {
-      const addLocationStatusCode = await apiRequestHandler.addLocation(token, locationName);
+      const addLocationStatusCode = await apiRequestHandler.addLocation(locationName);
       setIsLocationPopupVisible(false);
 
       if (addLocationStatusCode !== 201) {

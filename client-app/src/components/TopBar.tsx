@@ -33,7 +33,7 @@ export default function TopBar({ isUserInfoVisible }: TopBarProps) {
     }
 
     const getUserInfo = async () => {
-      const userInfo: UserInfoOutput = await apiRequestHandler.getUserInfo(token);
+      const userInfo: UserInfoOutput = await apiRequestHandler.getUserInfo();
 
       if (!userInfo) {
         dispatch(updatedUsername("User"));
@@ -53,7 +53,7 @@ export default function TopBar({ isUserInfoVisible }: TopBarProps) {
   }, []);
 
   const handleButtonClick = () => {
-    apiRequestHandler.logOut(token);
+    apiRequestHandler.logOut();
 
     dispatch(updatedUsername("User"));
     dispatch(updatedIsAdmin(false));

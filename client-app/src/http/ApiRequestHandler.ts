@@ -11,6 +11,7 @@ import {
 } from "./ApiInterfaces";
 import { Location } from "../types/Location";
 import { Desk } from "../types/Desk";
+import { TokenManager } from "../managers/TokenManager";
 
 export class ApiRequestHandler {
   private static instance: ApiRequestHandler;
@@ -47,14 +48,18 @@ export class ApiRequestHandler {
         throw new Error("Error");
       }
 
-      return (await response.json()) as TokenOutput;
+      const tokenOutput = (await response.json()) as TokenOutput;
+      TokenManager.setToken(tokenOutput.token);
+
+      return tokenOutput;
     } catch (error) {
       return error;
     }
   }
 
-  async logOut(token: string): Promise<any> {
+  async logOut(): Promise<any> {
     try {
+      const token = TokenManager.getToken();
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.logOut}`, {
         method: "PUT",
         headers: {
@@ -67,14 +72,17 @@ export class ApiRequestHandler {
         throw new Error("Error");
       }
 
+      TokenManager.clearToken();
+
       return response.status;
     } catch (error) {
       return error;
     }
   }
 
-  async getUserInfo(token: string): Promise<any> {
+  async getUserInfo(): Promise<any> {
     try {
+      const token = TokenManager.getToken();
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
         method: "GET",
         headers: {
@@ -93,8 +101,8 @@ export class ApiRequestHandler {
     }
   }
 
-  // Location requests
-  async addLocation(token: string, name: string): Promise<any> {
+  async addLocation(name: string): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: LocationName = {
       name: name,
     };
@@ -119,7 +127,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async removeLocation(token: string, name: string): Promise<any> {
+  async removeLocation(name: string): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: LocationName = {
       name: name,
     };
@@ -144,7 +153,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async getAllLocationNames(token: string): Promise<any> {
+  async getAllLocationNames(): Promise<any> {
+    const token = TokenManager.getToken();
     try {
       const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getAllLocationNames}`, {
         method: "GET",
@@ -164,7 +174,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async getDesks(token: string, locationName: string): Promise<any> {
+  async getDesks(locationName: string): Promise<any> {
+    const token = TokenManager.getToken();
     try {
       const response = await fetch(
         `${this.httpServerUrl}${ApiEndpoints.getDesks}/${locationName}`,
@@ -187,8 +198,8 @@ export class ApiRequestHandler {
     }
   }
 
-  // Desk requests
-  async addDesk(token: string, deskName: string, locationName: string): Promise<any> {
+  async addDesk(deskName: string, locationName: string): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
@@ -214,7 +225,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async removeDesk(token: string, deskName: string, locationName: string): Promise<any> {
+  async removeDesk(deskName: string, locationName: string): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
@@ -240,12 +252,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async bookDesk(
-    token: string,
-    deskName: string,
-    locationName: string,
-    days: number
-  ): Promise<any> {
+  async bookDesk(deskName: string, locationName: string, days: number): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: BookingInformation = {
       deskName: deskName,
       locationName: locationName,
@@ -272,7 +280,8 @@ export class ApiRequestHandler {
     }
   }
 
-  async unbookDesk(token: string, deskName: string, locationName: string): Promise<any> {
+  async unbookDesk(deskName: string, locationName: string): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
@@ -299,11 +308,11 @@ export class ApiRequestHandler {
   }
 
   async setDeskAvailability(
-    token: string,
     deskName: string,
     locationName: string,
     isEnabled: boolean
   ): Promise<any> {
+    const token = TokenManager.getToken();
     const requestBody: DeskAvailabilityInformation = {
       deskName: deskName,
       locationName: locationName,

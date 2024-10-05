@@ -82,6 +82,81 @@ public class UserController : ControllerBase
         return Ok();
     }
 
+    [HttpPost("LogIn")]
+    public async Task<IActionResult> LogIn([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Invalid model state.");
+        }
+
+        var user = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        if (!_hashManager.VerifyPassword(userCredentials.Password, user.Password))
+        {
+            return Unauthorized("Invalid credentials.");
+        }
+
+        var token = _tokenManager.CreateToken(userCredentials.Username, user.Role);
+        var output = new TokenOutput { Token = token };
+
+        return Ok(JsonHelper.Serialize(output));
+    }
+
+    [Authorize]
+    [HttpPut("LogOut")]
+    public IActionResult LogOut()
+    {
+        return Ok();
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("SetAdmin")]
+    public async Task<IActionResult> SetAdmin([FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest("Invalid model state.");
+        }
+
+        var user = await _userService.GetUserAsync(userAdminStatus.Username, cancellationToken);
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        user.Role = userAdminStatus.IsAdmin ? UserRole.Admin : UserRole.User;
+
+        var statusSet = await _userService.UpdateUserAsync(user, cancellationToken);
+
+        if (!statusSet)
+        {
+            return NotFound("Failed to update user.");
+        }
+
+        _logger.LogInformation($"SetAdmin: {userAdminStatus.Username} IsAdmin - {userAdminStatus.IsAdmin}");
+        return Ok();
+    }
+
+    [Authorize(Roles = UserRole.Admin)]
+    [HttpGet("IsAdmin/{username}")]
+    public async Task<IActionResult> IsAdmin([FromRoute] string username, CancellationToken cancellationToken = default)
+    {
+        var user = await _userService.GetUserAsync(username, cancellationToken);
+
+        if (user == null)
+        {
+            return NotFound("User not found.");
+        }
+
+        return Ok(user.Role == UserRole.Admin);
+    }
+
     [Authorize]
     [HttpGet("GetBooking")]
     public async Task<IActionResult> GetBookedDeskInfo(CancellationToken cancellationToken = default)
@@ -125,53 +200,6 @@ public class UserController : ControllerBase
         return Ok(users);
     }
 
-    [HttpPost("LogIn")]
-    public async Task<IActionResult> LogIn([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest("Invalid model state.");
-        }
-
-        var user = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
-
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
-
-        if (!_hashManager.VerifyPassword(userCredentials.Password, user.Password))
-        {
-            return Unauthorized("Invalid credentials.");
-        }
-
-        var token = _tokenManager.CreateToken(userCredentials.Username, user.Role);
-        var output = new TokenOutput { Token = token };
-
-        return Ok(JsonHelper.Serialize(output));
-    }
-
-    [Authorize]
-    [HttpPut("LogOut")]
-    public IActionResult LogOut()
-    {
-        return Ok();
-    }
-
-    [Authorize(Roles = UserRole.Admin)]
-    [HttpGet("IsAdmin/{username}")]
-    public async Task<IActionResult> IsAdmin([FromRoute] string username, CancellationToken cancellationToken = default)
-    {
-        var user = await _userService.GetUserAsync(username, cancellationToken);
-
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
-
-        return Ok(user.Role == UserRole.Admin);
-    }
-
     [Authorize]
     [HttpGet("GetUserInfo")]
     public async Task<IActionResult> GetUserInfo(CancellationToken cancellationToken = default)
@@ -209,33 +237,5 @@ public class UserController : ControllerBase
         };
 
         return Ok(JsonHelper.Serialize(output));
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpPut("SetAdmin")]
-    public async Task<IActionResult> SetAdmin([FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
-    {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest("Invalid model state.");
-        }
-
-        var user = await _userService.GetUserAsync(userAdminStatus.Username, cancellationToken);
-        if (user == null)
-        {
-            return NotFound("User not found.");
-        }
-
-        user.Role = userAdminStatus.IsAdmin ? UserRole.Admin : UserRole.User;
-
-        var statusSet = await _userService.UpdateUserAsync(user, cancellationToken);
-
-        if (!statusSet)
-        {
-            return NotFound("Failed to update user.");
-        }
-
-        _logger.LogInformation($"SetAdmin: {userAdminStatus.Username} IsAdmin - {userAdminStatus.IsAdmin}");
-        return Ok();
     }
 }
