@@ -7,6 +7,7 @@ using WebApi.Helpers;
 using WebApi.Http;
 using WebApi.Managers.Abstractions;
 using WebApi.Models;
+using WebApi.Models.Constants;
 using WebApi.Repositories;
 using Xunit;
 
@@ -17,6 +18,7 @@ namespace WebApi.Tests.Integration
         private readonly HttpClient _client;
         private readonly IServiceScope _scope;
         private readonly ISessionTokenManager _sessionTokenManager;
+        private readonly ApplicationDbContext _dbContext;
 
         public DeskControllerTests(DockerWebApplicationFactoryFixture factory)
         {
@@ -24,24 +26,25 @@ namespace WebApi.Tests.Integration
             _scope = factory.Services.CreateScope();
 
             _sessionTokenManager = _scope.ServiceProvider.GetRequiredService<ISessionTokenManager>();
+            _dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>()
+                ?? throw new Exception("DbContext does not exist");
         }
 
         [Fact]
         public async Task AddDesk_ShouldReturnCreated_WhenDeskIsAddedSuccessfully()
         {
             // Arrange
-            var dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var uniqueSuffix = DateTime.UtcNow.Ticks.ToString();
 
             var location = new Location { LocationName = $"Location_{uniqueSuffix}" };
-            await dbContext.Locations.AddAsync(location);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Locations.AddAsync(location);
+            await _dbContext.SaveChangesAsync();
 
             var deskInfo = new DeskInformation { DeskName = $"Desk_{uniqueSuffix}", LocationName = location.LocationName };
             var serializedDeskInfo = JsonHelper.Serialize(deskInfo);
             var requestContent = new StringContent(serializedDeskInfo, Encoding.UTF8, "application/json");
 
-            var token = _sessionTokenManager.CreateToken("adminuser", "Admin");
+            var token = _sessionTokenManager.CreateToken("adminuser", UserRole.Admin);
 
             // Act
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -55,21 +58,20 @@ namespace WebApi.Tests.Integration
         public async Task AddDesk_ShouldReturnConflict_WhenDeskAlreadyExists()
         {
             // Arrange
-            var dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var uniqueSuffix = DateTime.UtcNow.Ticks.ToString();
 
             var location = new Location { LocationName = $"Location_{uniqueSuffix}" };
-            await dbContext.Locations.AddAsync(location);
+            await _dbContext.Locations.AddAsync(location);
 
             var desk = new Desk { DeskName = $"Desk_{uniqueSuffix}", IsEnabled = true, Location = location };
-            await dbContext.Desks.AddAsync(desk);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Desks.AddAsync(desk);
+            await _dbContext.SaveChangesAsync();
 
             var deskInfo = new DeskInformation { DeskName = desk.DeskName, LocationName = location.LocationName };
             var serializedDeskInfo = JsonHelper.Serialize(deskInfo);
             var requestContent = new StringContent(serializedDeskInfo, Encoding.UTF8, "application/json");
 
-            var token = _sessionTokenManager.CreateToken("adminuser", "Admin");
+            var token = _sessionTokenManager.CreateToken("adminuser", UserRole.Admin);
 
             // Act
             _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -83,21 +85,20 @@ namespace WebApi.Tests.Integration
         public async Task RemoveDesk_ShouldReturnOk_WhenDeskIsRemovedSuccessfully()
         {
             // Arrange
-            var dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var uniqueSuffix = DateTime.UtcNow.Ticks.ToString();
 
             var location = new Location { LocationName = $"Location_{uniqueSuffix}" };
-            await dbContext.Locations.AddAsync(location);
+            await _dbContext.Locations.AddAsync(location);
 
             var desk = new Desk { DeskName = $"Desk_{uniqueSuffix}", IsEnabled = true, Location = location };
-            await dbContext.Desks.AddAsync(desk);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Desks.AddAsync(desk);
+            await _dbContext.SaveChangesAsync();
 
             var deskInfo = new DeskInformation { DeskName = desk.DeskName, LocationName = location.LocationName };
             var serializedDeskInfo = JsonHelper.Serialize(deskInfo);
             var requestContent = new StringContent(serializedDeskInfo, Encoding.UTF8, "application/json");
 
-            var token = _sessionTokenManager.CreateToken("adminuser", "Admin");
+            var token = _sessionTokenManager.CreateToken("adminuser", UserRole.Admin);
 
             // Act
             var request = new HttpRequestMessage(HttpMethod.Delete, "/api/desk/remove")
@@ -120,7 +121,7 @@ namespace WebApi.Tests.Integration
             var serializedDeskInfo = JsonHelper.Serialize(deskInfo);
             var requestContent = new StringContent(serializedDeskInfo, Encoding.UTF8, "application/json");
 
-            var token = _sessionTokenManager.CreateToken("adminuser", "Admin");
+            var token = _sessionTokenManager.CreateToken("adminuser", UserRole.Admin);
 
             // Act
             var request = new HttpRequestMessage(HttpMethod.Delete, "/api/desk/remove")
@@ -134,20 +135,18 @@ namespace WebApi.Tests.Integration
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
-
         [Fact]
         public async Task SetDeskAvailability_ShouldReturnOk_WhenDeskAvailabilityIsUpdatedSuccessfully()
         {
             // Arrange
-            var dbContext = _scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var uniqueSuffix = DateTime.UtcNow.Ticks.ToString();
 
             var location = new Location { LocationName = $"Location_{uniqueSuffix}" };
-            await dbContext.Locations.AddAsync(location);
+            await _dbContext.Locations.AddAsync(location);
 
             var desk = new Desk { DeskName = $"Desk_{uniqueSuffix}", IsEnabled = false, Location = location };
-            await dbContext.Desks.AddAsync(desk);
-            await dbContext.SaveChangesAsync();
+            await _dbContext.Desks.AddAsync(desk);
+            await _dbContext.SaveChangesAsync();
 
             var deskAvailabilityInfo = new DeskAvailabilityInformation
             {
