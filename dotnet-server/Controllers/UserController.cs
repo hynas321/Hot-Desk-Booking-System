@@ -17,7 +17,7 @@ public class UserController : ControllerBase
     private readonly IConfiguration _configuration;
     private readonly IUserService _userService;
     private readonly IDeskService _deskService;
-    private readonly ISessionTokenManager _tokenManager;
+    private readonly ISessionTokenManager _sessionTokenManager;
     private readonly IHashManager _hashManager;
 
     public UserController(
@@ -25,14 +25,14 @@ public class UserController : ControllerBase
         IConfiguration configuration,
         IUserService userService,
         IDeskService deskService,
-        ISessionTokenManager tokenManager,
+        ISessionTokenManager sessionTokenManager,
         IHashManager hashManager)
     {
         _logger = logger;
         _configuration = configuration;
         _userService = userService;
         _deskService = deskService;
-        _tokenManager = tokenManager;
+        _sessionTokenManager = sessionTokenManager;
         _hashManager = hashManager;
     }
 
@@ -102,7 +102,7 @@ public class UserController : ControllerBase
             return Unauthorized("Invalid credentials.");
         }
 
-        var token = _tokenManager.CreateToken(userCredentials.Username, user.Role);
+        var token = _sessionTokenManager.CreateToken(userCredentials.Username, user.Role);
         var output = new TokenOutput { Token = token };
 
         return Ok(JsonHelper.Serialize(output));

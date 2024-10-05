@@ -338,6 +338,29 @@ export class ApiRequestHandler {
       return error;
     }
   }
+
+  async refreshToken(): Promise<void> {
+    const token = TokenManager.getToken();
+    try {
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.refreshToken}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Error refreshing token");
+      }
+
+      const tokenOutput = (await response.json()) as TokenOutput;
+      TokenManager.setToken(tokenOutput.token);
+    } catch (error) {
+      console.error("Token refresh failed", error);
+      throw error;
+    }
+  }
 }
 
 export default ApiRequestHandler;

@@ -3,6 +3,7 @@ class ApiEndpoints {
   static readonly logIn: string = "/api/User/LogIn";
   static readonly logOut: string = "/api/User/LogOut";
   static readonly getUserInfo: string = "/api/User/GetUserInfo";
+  static readonly refreshToken: string = "/api/User/RefreshToken";
 
   //LocationController
   static readonly addLocation: string = "/api/Location/Add";
