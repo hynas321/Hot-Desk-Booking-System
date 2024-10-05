@@ -2,8 +2,5 @@
 
 public interface ISessionTokenManager
 {
-    string CreateToken(string username);
-    bool RemoveToken(string token);
-    string? GetUsername(string token);
-    Dictionary<string, string> GetAllSessions();
+    string CreateToken(string username, string role);
 }

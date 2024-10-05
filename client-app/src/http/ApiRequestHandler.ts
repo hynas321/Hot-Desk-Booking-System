@@ -1,6 +1,5 @@
 import config from "./../config.json";
 import ApiEndpoints from "./ApiEndpoints";
-import ApiHeaders from "./ApiHeaders";
 import {
   BookingInformation,
   DeskAvailabilityInformation,
@@ -36,16 +35,13 @@ export class ApiRequestHandler {
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.logIn}`,
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.logIn}`, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -59,16 +55,13 @@ export class ApiRequestHandler {
 
   async logOut(token: string): Promise<any> {
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.logOut}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.logOut}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -82,16 +75,13 @@ export class ApiRequestHandler {
 
   async getUserInfo(token: string): Promise<any> {
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.getUserInfo}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getUserInfo}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -110,17 +100,14 @@ export class ApiRequestHandler {
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.addLocation}`,
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.addLocation}`, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -138,17 +125,14 @@ export class ApiRequestHandler {
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.removeLocation}`,
-        {
-          method: "DELETE",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.removeLocation}`, {
+        method: "DELETE",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -160,17 +144,15 @@ export class ApiRequestHandler {
     }
   }
 
-  async getAllLocationNames(): Promise<any> {
+  async getAllLocationNames(token: string): Promise<any> {
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.getAllLocationNames}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.getAllLocationNames}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -190,7 +172,7 @@ export class ApiRequestHandler {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -206,28 +188,21 @@ export class ApiRequestHandler {
   }
 
   // Desk requests
-  async addDesk(
-    token: string,
-    deskName: string,
-    locationName: string
-  ): Promise<any> {
+  async addDesk(token: string, deskName: string, locationName: string): Promise<any> {
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.addDesk}`,
-        {
-          method: "POST",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.addDesk}`, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -239,28 +214,21 @@ export class ApiRequestHandler {
     }
   }
 
-  async removeDesk(
-    token: string,
-    deskName: string,
-    locationName: string
-  ): Promise<any> {
+  async removeDesk(token: string, deskName: string, locationName: string): Promise<any> {
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.removeDesk}`,
-        {
-          method: "DELETE",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.removeDesk}`, {
+        method: "DELETE",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -285,17 +253,14 @@ export class ApiRequestHandler {
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.bookDesk}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.bookDesk}`, {
+        method: "PUT",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -307,28 +272,21 @@ export class ApiRequestHandler {
     }
   }
 
-  async unbookDesk(
-    token: string,
-    deskName: string,
-    locationName: string
-  ): Promise<any> {
+  async unbookDesk(token: string, deskName: string, locationName: string): Promise<any> {
     const requestBody: DeskInformation = {
       deskName: deskName,
       locationName: locationName,
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.unbookDesk}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.unbookDesk}`, {
+        method: "PUT",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");
@@ -353,17 +311,14 @@ export class ApiRequestHandler {
     };
 
     try {
-      const response = await fetch(
-        `${this.httpServerUrl}${ApiEndpoints.setDeskAvailability}`,
-        {
-          method: "PUT",
-          body: JSON.stringify(requestBody),
-          headers: {
-            "Content-Type": "application/json",
-            [ApiHeaders.token]: token,
-          },
-        }
-      );
+      const response = await fetch(`${this.httpServerUrl}${ApiEndpoints.setDeskAvailability}`, {
+        method: "PUT",
+        body: JSON.stringify(requestBody),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Error");

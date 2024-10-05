@@ -1,8 +1,9 @@
-using Dotnet.Server.Managers;
 using Dotnet.Server.Http;
 using Dotnet.Server.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Dotnet.Server.Services;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Dotnet.Server.Controllers
 {
@@ -14,25 +15,23 @@ namespace Dotnet.Server.Controllers
         private readonly IDeskService _deskService;
         private readonly IUserService _userService;
         private readonly IBookingService _bookingService;
-        private readonly ISessionTokenManager _tokenManager;
 
         public BookingController(
             ILogger<BookingController> logger,
             IDeskService deskService,
             IUserService userService,
-            IBookingService bookingService,
-            ISessionTokenManager tokenManager
+            IBookingService bookingService
         )
         {
             _logger = logger;
             _deskService = deskService;
             _userService = userService;
             _bookingService = bookingService;
-            _tokenManager = tokenManager;
         }
 
+        [Authorize]
         [HttpPut("Book")]
-        public async Task<IActionResult> Book([FromHeader] string token, [FromBody] BookingInformation bookingInfo, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Book([FromBody] BookingInformation bookingInfo, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -40,7 +39,8 @@ namespace Dotnet.Server.Controllers
                 return BadRequest();
             }
 
-            var username = _tokenManager.GetUsername(token);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (username == null)
             {
                 _logger.LogInformation("Book: Status 401, Unauthorized");
@@ -49,12 +49,14 @@ namespace Dotnet.Server.Controllers
 
             var deskInformation = new DeskInformation { DeskName = bookingInfo.DeskName, LocationName = bookingInfo.LocationName };
             var desk = await _deskService.GetDeskAsync(deskInformation, cancellationToken);
+
             if (desk == null)
             {
                 return NotFound();
             }
 
             var user = await _userService.GetUserAsync(username, cancellationToken);
+
             if (user == null)
             {
                 _logger.LogInformation("Book: Status 401, Unauthorized");
@@ -62,6 +64,7 @@ namespace Dotnet.Server.Controllers
             }
 
             var deskDTO = await _bookingService.AddBookingAsync(user, bookingInfo, cancellationToken);
+
             if (deskDTO == null)
             {
                 _logger.LogInformation("Book: Status 500, Internal Server Error");
@@ -71,8 +74,9 @@ namespace Dotnet.Server.Controllers
             return Ok(JsonHelper.Serialize(deskDTO));
         }
 
+        [Authorize]
         [HttpPut("Unbook")]
-        public async Task<IActionResult> Unbook([FromHeader] string token, [FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> Unbook([FromBody] DeskInformation deskInfo, CancellationToken cancellationToken = default)
         {
             if (!ModelState.IsValid)
             {
@@ -80,7 +84,8 @@ namespace Dotnet.Server.Controllers
                 return BadRequest();
             }
 
-            var username = _tokenManager.GetUsername(token);
+            var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
             if (username == null)
             {
                 _logger.LogInformation("Unbook: Status 401, Unauthorized");
@@ -88,12 +93,14 @@ namespace Dotnet.Server.Controllers
             }
 
             var desk = await _deskService.GetDeskAsync(deskInfo, cancellationToken);
+
             if (desk == null)
             {
                 return NotFound();
             }
 
             var deskDTO = await _bookingService.RemoveBookingAsync(deskInfo, cancellationToken);
+
             if (deskDTO == null)
             {
                 _logger.LogInformation("Unbook: Status 500, Internal Server Error");

@@ -48,7 +48,7 @@ public class BookingService : IBookingService
         {
             DeskName = desk.DeskName,
             IsEnabled = desk.IsEnabled,
-            Username = user.UserName,
+            Username = user.Username,
             StartTime = startTime.ToString("dd-MM-yyyy"),
             EndTime = endTime.ToString("dd-MM-yyyy")
         };

@@ -1,36 +1,38 @@
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+
 namespace Dotnet.Server.Managers;
 
 public class SessionTokenManager : ISessionTokenManager
 {
-    private static Dictionary<string, string> tokens = new Dictionary<string, string>();
+    private readonly IConfiguration _configuration;
 
-    public string CreateToken(string username)
+    public SessionTokenManager(IConfiguration configuration)
     {
-        string token = Guid.NewGuid().ToString().Replace("-", "").Substring(0, 16);
-        tokens.Add(token, username);
-
-        return token;
+        _configuration = configuration;
     }
 
-    public bool RemoveToken(string token)
+    public string CreateToken(string username, string role)
     {
-        return tokens.Remove(token);
-    }
+        var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, username),
+                new Claim(ClaimTypes.Name, username),
+                new Claim(ClaimTypes.Role, role)
+            };
 
-    public string? GetUsername(string token)
-    {
-        if (tokens.TryGetValue(token, out string? username))
-        {
-            return username;
-        }
-        else
-        {
-            return null; 
-        }
-    }
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-    public Dictionary<string, string> GetAllSessions()
-    {
-        return tokens;
+        var token = new JwtSecurityToken(
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Issuer"],
+            claims: claims,
+            expires: DateTime.Now.AddHours(12),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
     }
 }

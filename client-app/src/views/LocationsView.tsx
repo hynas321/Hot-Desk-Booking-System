@@ -13,10 +13,8 @@ import ApiRequestHandler from "../http/ApiRequestHandler";
 
 export default function LocationsView() {
   const [locations, setLocations] = useState<Location[]>([]);
-  const [isAddLocationPopupVisible, setIsLocationPopupVisible] =
-    useState<boolean>(false);
-  const [isLocationListVisible, setIsLocationListVisible] =
-    useState<boolean>(false);
+  const [isAddLocationPopupVisible, setIsLocationPopupVisible] = useState<boolean>(false);
+  const [isLocationListVisible, setIsLocationListVisible] = useState<boolean>(false);
   const [token] = useLocalStorageState("token", { defaultValue: "" });
   const navigate = useNavigate();
   const user = useAppSelector((state) => state.user);
@@ -27,7 +25,7 @@ export default function LocationsView() {
   // eslint-disable-next-line
   useEffect(() => {
     const fetchLocationsAsync = async () => {
-      const fetchedLocations = await apiRequestHandler.getAllLocationNames();
+      const fetchedLocations = await apiRequestHandler.getAllLocationNames(token);
 
       if (!Array.isArray(fetchedLocations)) {
         alertManager.displayAlert("Could not load locations", "danger");
@@ -57,16 +55,10 @@ export default function LocationsView() {
 
   const handleRemoveButtonClick = async (locationName: string) => {
     try {
-      const removeLocationStatusCode = await apiRequestHandler.removeLocation(
-        token,
-        locationName
-      );
+      const removeLocationStatusCode = await apiRequestHandler.removeLocation(token, locationName);
 
       if (removeLocationStatusCode !== 200) {
-        alertManager.displayAlert(
-          `Could not remove the location ${locationName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not remove the location ${locationName}`, "danger");
         return;
       }
 
@@ -81,17 +73,11 @@ export default function LocationsView() {
 
   const handlePopupSubmit = async (locationName: string) => {
     try {
-      const addLocationStatusCode = await apiRequestHandler.addLocation(
-        token,
-        locationName
-      );
+      const addLocationStatusCode = await apiRequestHandler.addLocation(token, locationName);
       setIsLocationPopupVisible(false);
 
       if (addLocationStatusCode !== 201) {
-        alertManager.displayAlert(
-          `Could not add the location: ${locationName}`,
-          "danger"
-        );
+        alertManager.displayAlert(`Could not add the location: ${locationName}`, "danger");
         return;
       }
 

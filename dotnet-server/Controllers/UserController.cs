@@ -1,9 +1,11 @@
 using Dotnet.Server.Managers;
 using Dotnet.Server.Http;
-using Dotnet.Server.Configuration;
 using Microsoft.AspNetCore.Mvc;
 using Dotnet.Server.Services;
 using Dotnet.Server.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using dotnet_server.Models.Constants;
 
 namespace Dotnet.Server.Controllers;
 
@@ -34,17 +36,13 @@ public class UserController : ControllerBase
         _hashManager = hashManager;
     }
 
+    [Authorize(Roles = UserRole.Admin)]
     [HttpPost("Add")]
-    public async Task<IActionResult> Add([FromHeader] string token, [FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Add([FromBody] UserCredentials userCredentials, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest("Invalid model state.");
-        }
-
-        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
-        {
-            return Unauthorized("Unauthorized access.");
         }
 
         if (await _userService.GetUserAsync(userCredentials.Username, cancellationToken) != null)
@@ -54,54 +52,56 @@ public class UserController : ControllerBase
 
         var newUser = new User
         {
-            UserName = userCredentials.Username,
+            Username = userCredentials.Username,
             Password = _hashManager.HashPassword(userCredentials.Password),
-            IsAdmin = false
+            Role = UserRole.User
         };
 
         await _userService.AddUserAsync(newUser, cancellationToken);
-        return CreatedAtAction(nameof(GetUserInfo), new { username = newUser.UserName }, newUser);
+
+        return CreatedAtAction(nameof(GetUserInfo), new { username = newUser.Username }, newUser);
     }
 
+    [Authorize(Roles = UserRole.Admin)]
     [HttpDelete("Remove")]
-    public async Task<IActionResult> Remove([FromHeader] string token, [FromBody] string username, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Remove([FromBody] string username, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest("Invalid model state.");
         }
 
-        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
-        {
-            return Unauthorized("Unauthorized access.");
-        }
-
         var existingUser = await _userService.GetUserAsync(username, cancellationToken);
-        if (existingUser == null)
+
+        if (existingUser?.Username == null)
         {
             return NotFound("User not found.");
         }
 
-        await _userService.RemoveUserAsync(existingUser.UserName, cancellationToken);
+        await _userService.RemoveUserAsync(existingUser.Username, cancellationToken);
         return Ok();
     }
 
+    [Authorize]
     [HttpGet("GetBooking")]
-    public async Task<IActionResult> GetBookedDeskInfo([FromHeader] string token, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetBookedDeskInfo(CancellationToken cancellationToken = default)
     {
-        var username = _tokenManager.GetUsername(token);
+        var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
         if (username == null)
         {
             return Unauthorized("Unauthorized access.");
         }
 
         var user = await _userService.GetUserAsync(username, cancellationToken);
+
         if (user == null)
         {
             return Unauthorized("Unauthorized access.");
         }
 
         var bookedDesk = user.Bookings.Select(b => b.Desk).FirstOrDefault();
+
         if (bookedDesk == null)
         {
             return NotFound("No booked desk found.");
@@ -116,28 +116,13 @@ public class UserController : ControllerBase
         return Ok(bookingInfo);
     }
 
+    [Authorize(Roles = UserRole.Admin)]
     [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
     {
-        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
-        {
-            return Unauthorized("Unauthorized access.");
-        }
-
         var users = await _userService.GetAllUsersAsync(cancellationToken);
+
         return Ok(users);
-    }
-
-    [HttpGet("GetAllSessions")]
-    public IActionResult GetAllSessions([FromHeader] string globalAdminToken, CancellationToken cancellationToken = default)
-    {
-        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
-        {
-            return Unauthorized("Unauthorized access.");
-        }
-
-        var sessions = _tokenManager.GetAllSessions();
-        return Ok(JsonHelper.Serialize(sessions));
     }
 
     [HttpPost("LogIn")]
@@ -149,6 +134,7 @@ public class UserController : ControllerBase
         }
 
         var user = await _userService.GetUserAsync(userCredentials.Username, cancellationToken);
+
         if (user == null)
         {
             return NotFound("User not found.");
@@ -159,50 +145,46 @@ public class UserController : ControllerBase
             return Unauthorized("Invalid credentials.");
         }
 
-        var token = _tokenManager.CreateToken(userCredentials.Username);
+        var token = _tokenManager.CreateToken(userCredentials.Username, user.Role);
         var output = new TokenOutput { Token = token };
+
         return Ok(JsonHelper.Serialize(output));
     }
 
+    [Authorize]
     [HttpPut("LogOut")]
-    public IActionResult LogOut([FromHeader] string token, CancellationToken cancellationToken = default)
+    public IActionResult LogOut()
     {
-        if (string.IsNullOrEmpty(token))
-        {
-            return BadRequest("Token is required.");
-        }
-
-        var userLoggedOut = _tokenManager.RemoveToken(token);
-        return Ok(userLoggedOut);
+        return Ok();
     }
 
+    [Authorize(Roles = UserRole.Admin)]
     [HttpGet("IsAdmin/{username}")]
-    public async Task<IActionResult> IsAdmin([FromHeader] string globalAdminToken, [FromRoute] string username, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> IsAdmin([FromRoute] string username, CancellationToken cancellationToken = default)
     {
-        if (globalAdminToken != _configuration[Config.GlobalAdminToken])
-        {
-            return Unauthorized("Unauthorized access.");
-        }
-
         var user = await _userService.GetUserAsync(username, cancellationToken);
+
         if (user == null)
         {
             return NotFound("User not found.");
         }
 
-        return Ok(user.IsAdmin);
+        return Ok(user.Role == UserRole.Admin);
     }
 
+    [Authorize]
     [HttpGet("GetUserInfo")]
-    public async Task<IActionResult> GetUserInfo([FromHeader] string token, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetUserInfo(CancellationToken cancellationToken = default)
     {
-        var username = _tokenManager.GetUsername(token);
+        var username = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
         if (username == null)
         {
             return NotFound("User not found.");
         }
 
         var user = await _userService.GetUserAsync(username, cancellationToken);
+
         if (user == null)
         {
             return NotFound("User not found.");
@@ -220,8 +202,8 @@ public class UserController : ControllerBase
 
         var output = new UserInfoOutput
         {
-            Username = user.UserName,
-            IsAdmin = user.IsAdmin,
+            Username = user.Username,
+            IsAdmin = user.Role == UserRole.Admin,
             BookedDesk = deskDTO,
             BookedDeskLocation = bookedDesk?.Location?.LocationName
         };
@@ -229,17 +211,13 @@ public class UserController : ControllerBase
         return Ok(JsonHelper.Serialize(output));
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpPut("SetAdmin")]
-    public async Task<IActionResult> SetAdmin([FromHeader] string token, [FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> SetAdmin([FromBody] UserAdminStatus userAdminStatus, CancellationToken cancellationToken = default)
     {
         if (!ModelState.IsValid)
         {
             return BadRequest("Invalid model state.");
-        }
-
-        if (!await IsGlobalAdminOrAuthorized(token, cancellationToken))
-        {
-            return Unauthorized("Unauthorized access.");
         }
 
         var user = await _userService.GetUserAsync(userAdminStatus.Username, cancellationToken);
@@ -248,8 +226,10 @@ public class UserController : ControllerBase
             return NotFound("User not found.");
         }
 
-        user.IsAdmin = userAdminStatus.IsAdmin;
+        user.Role = userAdminStatus.IsAdmin ? UserRole.Admin : UserRole.User;
+
         var statusSet = await _userService.UpdateUserAsync(user, cancellationToken);
+
         if (!statusSet)
         {
             return NotFound("Failed to update user.");
@@ -257,22 +237,5 @@ public class UserController : ControllerBase
 
         _logger.LogInformation($"SetAdmin: {userAdminStatus.Username} IsAdmin - {userAdminStatus.IsAdmin}");
         return Ok();
-    }
-
-    private async Task<bool> IsGlobalAdminOrAuthorized(string token, CancellationToken cancellationToken)
-    {
-        if (token == _configuration[Config.GlobalAdminToken])
-        {
-            return true;
-        }
-
-        var username = _tokenManager.GetUsername(token);
-        if (username == null)
-        {
-            return false;
-        }
-
-        var user = await _userService.GetUserAsync(username, cancellationToken);
-        return user != null && user.IsAdmin;
     }
 }

@@ -1,11 +1,14 @@
-using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-public class User : IdentityUser
+public class User
 {
-    public string Password { get; set; }
-    // Additional properties for your application user
-    public bool IsAdmin { get; set; } = false;
+    [Key]
+    public string Username { get; set; } = default!;
+    public string Password { get; set; } = default!;
+
+    public string Role { get; set; } = "User";
+
 
     // Navigation property for Bookings
     [JsonIgnore]

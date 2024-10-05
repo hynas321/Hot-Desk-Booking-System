@@ -1,4 +1,5 @@
 ﻿using System;
+using Dotnet.Server.Managers;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace dotnet_server.Migrations
 {
     /// <inheritdoc />
-    public partial class Migration1 : Migration
+    public partial class Migration_1 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,27 +29,13 @@ namespace dotnet_server.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false),
+                    Username = table.Column<string>(type: "TEXT", nullable: false),
                     Password = table.Column<string>(type: "TEXT", nullable: false),
-                    IsAdmin = table.Column<bool>(type: "INTEGER", nullable: false),
-                    UserName = table.Column<string>(type: "TEXT", nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "TEXT", nullable: true),
-                    Email = table.Column<string>(type: "TEXT", nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "TEXT", nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "TEXT", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "INTEGER", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "INTEGER", nullable: false)
+                    Role = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_Users", x => x.Username);
                 });
 
             migrationBuilder.CreateTable(
@@ -96,7 +83,7 @@ namespace dotnet_server.Migrations
                         name: "FK_Bookings_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
-                        principalColumn: "Id",
+                        principalColumn: "Username",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -114,6 +101,21 @@ namespace dotnet_server.Migrations
                 name: "IX_Desks_LocationId",
                 table: "Desks",
                 column: "LocationId");
+
+            var hashManager = new HashManager();
+            var user1PasswordHash = hashManager.HashPassword("user1");
+            var user2PasswordHash = hashManager.HashPassword("user2");
+            var adminPasswordHash = hashManager.HashPassword("admin");
+
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Username", "Password", "Role" },
+                values: new object[,]
+                {
+                    { "User1", user1PasswordHash, "User" },
+                    { "User2", user2PasswordHash, "User" },
+                    { "Admin", adminPasswordHash, "Admin" }
+                });
         }
 
         /// <inheritdoc />

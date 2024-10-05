@@ -32,7 +32,7 @@ public class UserRepository : IUserRepository
 
     public async Task<User> GetUserAsync(string username, CancellationToken cancellationToken)
     {
-        return await dbContext.Users.FirstOrDefaultAsync(user => user.UserName == username, cancellationToken);
+        return await dbContext.Users.FirstOrDefaultAsync(user => user.Username == username, cancellationToken);
     }
 
     public async Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken)

@@ -13,7 +13,7 @@ public class UserService : IUserService
 
     public async Task<bool> AddUserAsync(User user, CancellationToken cancellationToken)
     {
-        var existingUser = await userRepository.GetUserAsync(user.UserName, cancellationToken);
+        var existingUser = await userRepository.GetUserAsync(user.Username, cancellationToken);
 
         if (existingUser != null)
         {
@@ -39,7 +39,7 @@ public class UserService : IUserService
 
     public async Task<bool> UpdateUserAsync(User user, CancellationToken cancellationToken)
     {
-        var existingUser = await userRepository.GetUserAsync(user.UserName, cancellationToken);
+        var existingUser = await userRepository.GetUserAsync(user.Username, cancellationToken);
 
         if (existingUser == null)
         {
