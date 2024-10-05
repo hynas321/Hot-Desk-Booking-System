@@ -74,9 +74,9 @@ public class DailyTaskService : IHostedService
                 logger.LogInformation($"Found {obsoleteBookingsCount} obsolete bookings");
             }
         }
-        catch (Exception ex)
+        catch
         {
-            logger.LogError(ex, "An error occurred during the execution of the daily task.");
+            throw new Exception("Incorrect DataContext or no database connection.");
         }
     }
 
