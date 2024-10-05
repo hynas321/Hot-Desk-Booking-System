@@ -6,19 +6,17 @@ using WebApi.Managers;
 
 namespace dotnet_server.Migrations
 {
-    /// <inheritdoc />
     public partial class Migration_1 : Migration
     {
-        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
                 name: "Locations",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    LocationName = table.Column<string>(type: "TEXT", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LocationName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -29,9 +27,9 @@ namespace dotnet_server.Migrations
                 name: "Users",
                 columns: table => new
                 {
-                    Username = table.Column<string>(type: "TEXT", nullable: false),
-                    Password = table.Column<string>(type: "TEXT", nullable: false),
-                    Role = table.Column<string>(type: "TEXT", nullable: false)
+                    Username = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -42,11 +40,11 @@ namespace dotnet_server.Migrations
                 name: "Desks",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    DeskName = table.Column<string>(type: "TEXT", nullable: false),
-                    IsEnabled = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LocationId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    DeskName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LocationId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -63,12 +61,12 @@ namespace dotnet_server.Migrations
                 name: "Bookings",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    StartTime = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    EndTime = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    UserId = table.Column<string>(type: "TEXT", nullable: true),
-                    DeskId = table.Column<int>(type: "INTEGER", nullable: false)
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    StartTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    EndTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    DeskId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -102,11 +100,13 @@ namespace dotnet_server.Migrations
                 table: "Desks",
                 column: "LocationId");
 
+            // Use HashManager to hash passwords for initial seed data
             var hashManager = new HashManager();
             var user1HashedPassword = hashManager.HashPassword("user1");
             var user2HashedPassword = hashManager.HashPassword("user2");
             var adminHashedPassword = hashManager.HashPassword("admin");
 
+            // Insert initial data
             migrationBuilder.InsertData(
                 table: "Locations",
                 columns: new[] { "Id", "LocationName" },
@@ -133,18 +133,17 @@ namespace dotnet_server.Migrations
                 columns: new[] { "Id", "DeskName", "IsEnabled", "LocationId" },
                 values: new object[,]
                 {
-                    { 1, "Desk 1", true, 1 }, // Room A
-                    { 2, "Desk 2", true, 1 }, // Room A
-                    { 3, "Desk a", true, 2 }, // Room B
-                    { 4, "Desk b", true, 2 }, // Room B
-                    { 5, "Special desk 1", true, 3 }, // Room C
-                    { 6, "Special desk 2", true, 3 }, // Room C
-                    { 7, "Desk 1", true, 4 }, // Room D
-                    { 8, "Desk 2", true, 4 }  // Room D
+                    { 1, "Desk 1", true, 1 },
+                    { 2, "Desk 2", true, 1 },
+                    { 3, "Desk a", true, 2 },
+                    { 4, "Desk b", true, 2 },
+                    { 5, "Special desk 1", true, 3 },
+                    { 6, "Special desk 2", true, 3 },
+                    { 7, "Desk 1", true, 4 },
+                    { 8, "Desk 2", true, 4 }
                 });
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

@@ -24,7 +24,7 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-       optionsBuilder.UseSqlite(configuration.GetConnectionString("DefaultConnection"));
+       optionsBuilder.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
        optionsBuilder.UseLazyLoadingProxies();
     }
 

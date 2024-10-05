@@ -67,8 +67,8 @@ public class BookingController : ControllerBase
 
         if (deskDTO == null)
         {
-            _logger.LogInformation("Book: Status 500, Internal Server Error");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            _logger.LogInformation("Book: Status 409, Conflict");
+            return StatusCode(StatusCodes.Status409Conflict);
         }
 
         return Ok(JsonHelper.Serialize(deskDTO));
@@ -103,8 +103,8 @@ public class BookingController : ControllerBase
 
         if (deskDTO == null)
         {
-            _logger.LogInformation("Unbook: Status 500, Internal Server Error");
-            return StatusCode(StatusCodes.Status500InternalServerError);
+            _logger.LogInformation("Book: Status 409, Conflict");
+            return StatusCode(StatusCodes.Status409Conflict);
         }
 
         return Ok(JsonHelper.Serialize(deskDTO));
