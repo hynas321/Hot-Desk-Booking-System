@@ -1,0 +1,41 @@
+<div class="container">
+  <div class="row">
+    <div class="col-12 col-md-3"></div>
+    <div class="col-12 col-md-6">
+      <h3 class="text-center mt-3">
+        <b class="text-primary">Hot Desk Booking System</b>
+      </h3>
+    </div>
+    <div class="col-12 col-md-3 mt-3 justify-content-md-end">
+      <div
+        *ngIf="user$ | async as user"
+        class="d-flex justify-content-center justify-content-md-end"
+      >
+        <span class="text-secondary align-content-center me-3">
+          {{ user.isAdmin ? "Administrator" : "Employee" }}:
+          <b>{{ user.username }}</b>
+        </span>
+        <button
+          *ngIf="userService.getUser()"
+          class="btn btn-danger"
+          (click)="handleButtonClick()"
+        >
+          Sign out
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    *ngIf="user$ | async as user"
+    class="mb-3 d-flex justify-content-center align-items-center user-details-container"
+  >
+    <div *ngIf="user.bookedDesk">
+      <span class="text-primary">Current booking:</span>
+      <span class="text-primary">
+        {{ user.bookedDesk.deskName }} in {{ user.bookedDeskLocation }} until
+        {{ user.bookedDesk.endTime }}
+      </span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,14 @@
+<div class="d-flex align-items-center">
+  <label class="form-label">{{ title }}: {{ value }} {{ suffix }}</label>
+  <div class="flex-grow-1">
+    <input
+      class="form-range mx-2"
+      type="range"
+      [value]="value"
+      [min]="minValue"
+      [max]="maxValue"
+      [step]="step"
+      (input)="onRangeChange($event)"
+    />
+  </div>
+</div>

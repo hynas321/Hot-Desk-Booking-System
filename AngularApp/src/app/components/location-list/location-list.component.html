@@ -1,0 +1,31 @@
+<ul class="list-group mt-3">
+  <li
+    *ngFor="let location of locations; let index = index"
+    class="list-group-item"
+  >
+    <div>
+      <b>{{ location.locationName }}</b>
+    </div>
+    <div class="mb-2">
+      Total desks: {{ location.totalDeskCount }}, available:
+      {{ location.availableDeskCount }}
+    </div>
+
+    <app-button
+      [text]="'Enter location'"
+      [active]="true"
+      [type]="'primary'"
+      (onClick)="handleChooseClick(location.locationName)"
+    ></app-button>
+
+    <app-button
+      *ngIf="isUserAdmin && location.totalDeskCount === 0"
+      [text]="'Remove'"
+      [active]="true"
+      [type]="'warn'"
+      (onClick)="handleRemoveClick(location.locationName)"
+    ></app-button>
+  </li>
+
+  <h5 class="text-danger" *ngIf="locations.length === 0">Nothing to display</h5>
+</ul>
