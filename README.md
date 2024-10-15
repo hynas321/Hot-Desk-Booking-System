@@ -87,7 +87,8 @@ Endpoints cannot be accessed without a JSON Web Token. The token is generated wh
   ![image](https://github.com/user-attachments/assets/44ba753a-c4e6-493e-9eea-98cb6b84e1fa)
 
 - Desks view (from Administrator's POV)
-  ![image](https://github.com/user-attachments/assets/083c8b67-49a3-443b-b79f-70c1afea9a25)
+  ![image](https://github.com/user-attachments/assets/d799c3ad-deff-4391-9f3b-2514e6320091)
+
 
 - Desks view (from Employee's POV - current booking)
   ![image](https://github.com/user-attachments/assets/10347503-bc32-4b8f-8c2d-a697d78bc04c)
