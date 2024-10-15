@@ -1,0 +1,25 @@
+<div class="container col-lg-6 col-md-8 col-12 mb-5">
+  <h5>Locations</h5>
+
+  <ng-container *ngIf="isLocationListVisible; else loading">
+    <app-button
+      *ngIf="(user$ | async)?.isAdmin"
+      [text]="'Add location'"
+      [active]="true"
+      [type]="'success'"
+      (onClick)="handleAddButtonClick()"
+    ></app-button>
+
+    <app-location-list
+      [locations]="locations"
+      [user]="user$ | async"
+      (onChooseClick)="handleChooseLocationButtonClick($event)"
+      (onRemoveClick)="handleRemoveButtonClick($event)"
+    >
+    </app-location-list>
+  </ng-container>
+
+  <ng-template #loading>
+    <h6 class="mt-3 text-success">Loading data...</h6>
+  </ng-template>
+</div>

@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json.Serialization;
 
 namespace WebApi.Models;
 
@@ -13,19 +12,13 @@ public class Booking
 
     public DateTime? EndTime { get; set; }
 
-    // Foreign key for User
     public string? UserId { get; set; }
 
-    // Foreign key for Desk
     public int DeskId { get; set; }
 
-    // Navigation property for Desk
     [ForeignKey("DeskId")]
-    [JsonIgnore]
-    public virtual Desk? Desk { get; set; }
+    public Desk? Desk { get; set; }
 
-    // Navigation property for User
     [ForeignKey("UserId")]
-    [JsonIgnore]
-    public virtual User? User { get; set; }
+    public User? User { get; set; }
 }

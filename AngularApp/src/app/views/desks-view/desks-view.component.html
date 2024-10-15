@@ -1,0 +1,39 @@
+<div class="container col-lg-6 col-md-10 col-12 mb-5">
+  <h5>
+    Desks in location <b>{{ locationName }}</b>
+  </h5>
+
+  <ng-container *ngIf="isDeskListVisible; else loading">
+    <app-button
+      *ngIf="(user$ | async)?.isAdmin"
+      [text]="'Add desk'"
+      [active]="true"
+      [type]="'success'"
+      (onClick)="handleAddButtonClick()"
+    ></app-button>
+
+    <app-button
+      [text]="'Return to locations'"
+      [active]="true"
+      [type]="'secondary'"
+      [spacing]="(user$ | async)?.isAdmin ? 2 : 0"
+      (onClick)="handleGoBackButtonClick()"
+    ></app-button>
+
+    <app-desk-list
+      [desks]="desks"
+      [user]="user$ | async"
+      (onBookClick)="handleBookButtonClick($event)"
+      (onUnbookClick)="handleUnbookButtonClick($event)"
+      (onRemoveClick)="handleRemoveButtonClick($event)"
+      (onEnableClick)="handleEnableButtonClick($event)"
+      (onDisableClick)="handleDisableButtonClick($event)"
+      (onRangeChange)="handleDaysRangeChange($event)"
+    >
+    </app-desk-list>
+  </ng-container>
+
+  <ng-template #loading>
+    <h6 class="mt-3 text-success">Loading data...</h6>
+  </ng-template>
+</div>

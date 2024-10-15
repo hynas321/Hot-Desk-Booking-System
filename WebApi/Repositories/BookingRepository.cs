@@ -29,8 +29,12 @@ public class BookingRepository : IBookingRepository
 
     public async Task<Booking?> GetBookingAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {
-        return await dbContext.Bookings.FirstOrDefaultAsync(
-            b => b.Desk.DeskName == deskInformation.DeskName &&
-            b.Desk.Location.LocationName == deskInformation.LocationName, cancellationToken);
+        return await dbContext.Bookings
+            .Include(b => b.Desk)
+                .ThenInclude(d => d.Location)
+            .Include(b => b.User)
+            .FirstOrDefaultAsync(
+                b => b.Desk.DeskName == deskInformation.DeskName &&
+                     b.Desk.Location.LocationName == deskInformation.LocationName, cancellationToken);
     }
 }

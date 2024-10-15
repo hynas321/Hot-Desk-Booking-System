@@ -1,0 +1,31 @@
+<mat-dialog-content>
+  <h6 mat-dialog-title>{{ data.title }}</h6>
+
+  <form [formGroup]="popupForm">
+    <mat-form-field class="full-width">
+      <mat-label>{{ data.inputFormPlaceholderText }}</mat-label>
+      <input
+        matInput
+        formControlName="inputValue"
+        placeholder="{{ data.inputFormPlaceholderText }}"
+      />
+      <mat-error *ngIf="popupForm.get('inputValue')?.invalid">
+        Please provide a valid value.
+      </mat-error>
+    </mat-form-field>
+
+    <div class="d-flex justify-content-end mt-2">
+      <button mat-raised-button color="warn" (click)="onCancel()">
+        Cancel
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        [disabled]="!checkFormValidity()"
+        (click)="onSubmit()"
+      >
+        Submit
+      </button>
+    </div>
+  </form>
+</mat-dialog-content>

@@ -1,0 +1,6 @@
+<button [class]="getButtonClasses()" (click)="handleClick()">
+  <span>
+    <i *ngIf="icon" class="{{ icon }}"></i>
+    {{ text }}
+  </span>
+</button>

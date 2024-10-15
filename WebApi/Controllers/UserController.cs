@@ -1,12 +1,9 @@
-using WebApi.Managers;
 using WebApi.Http;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Services;
 using WebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using WebApi.Models.Constants;
-using WebApi.Repositories.Abstractions;
 using WebApi.Managers.Abstractions;
 using WebApi.Services.Abstractions;
 using WebApi.Models;
@@ -107,7 +104,7 @@ public class UserController : ControllerBase
         }
 
         var token = _sessionTokenManager.CreateToken(userCredentials.Username, user.Role);
-        var output = new TokenOutput { Token = token };
+        var output = new TokenDTO { Token = token };
 
         return Ok(JsonHelper.Serialize(output));
     }
@@ -232,7 +229,7 @@ public class UserController : ControllerBase
             EndTime = bookedDesk.Bookings.First().EndTime?.ToString("dd-MM-yyyy")
         } : null;
 
-        var output = new UserInfoOutput
+        var output = new UserDTO
         {
             Username = user.Username,
             IsAdmin = user.Role == UserRole.Admin,
