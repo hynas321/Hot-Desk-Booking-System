@@ -12,19 +12,19 @@ Sample credentials (username, password) to log in and test the program:
 
 ## Technological overview
 
-**Frontend**: `React` `Typescript` `Redux` `Bootstrap` \
+**Frontend**: `Angular` `Typescript` `Bootstrap` \
 **Backend**: `ASP.NET Core` `Sql Server (Docker)` `Entity Framework Core` \
 **Testing**: `XUnit` `TestContainers` `Docker`
 
 ## Configuration commands
 
-Frontend (ReactApp)
+Frontend (AngularApp)
 - `npm install`
-- `npm run start`
+- `ng serve`
 
 Backend (WebApi): 
 - `docker-compose up` (to run Sql Server database)
-- `dotnet run`
+- `dotnet run` (with http for local environment)
 
 Integration Tests (WebApi.IntegrationTests): 
 - `dotnet test`
