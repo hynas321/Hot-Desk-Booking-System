@@ -31,7 +31,7 @@
     class="mb-3 d-flex justify-content-center align-items-center user-details-container"
   >
     <div *ngIf="user.bookedDesk">
-      <span class="text-primary">Current booking:</span>
+      <span class="text-primary"><b>Current booking</b></span>
       <span class="text-primary">
         {{ user.bookedDesk.deskName }} in {{ user.bookedDeskLocation }} until
         {{ user.bookedDesk.endTime }}
