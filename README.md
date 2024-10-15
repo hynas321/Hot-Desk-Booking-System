@@ -2,29 +2,32 @@
 
 ## Introduction
 
-**Hot Desk Booking System** is a website that allows booking a desk in the chosen location. Access to this system is possible only through the account. There are both **Employees** and **Administrators**, each with different permissions.
+**Hot Desk Booking System** is a website that allows booking a desk in the chosen location. Access to this system is possible only through the account. There are both **Users** and **Administrators**, each with different permissions.
 
-Sample credentials to log in and test the program:
+Sample credentials (username, password) to log in and test the program:
 
-- User1 user1 (Employee)
-- User2 user2 (Employee)
-- Admin admin (Admin)
+- User1 user1 (role: User)
+- User2 user2 (role: User)
+- Admin admin (role: Admin)
 
 ## Technological overview
 
-**Frontend**: `React` `Typescript` `Redux` `Bootstrap` \
-**Backend**: `ASP.NET Core` `SQLite` `Entity Framework Core`
-
-Used code editor: `Visual Studio Code`\
-Testing: `XUnit`
+**Frontend**: `Angular` `Typescript` `Bootstrap` \
+**Backend**: `ASP.NET Core` `Sql Server (Docker)` `Entity Framework Core` \
+**Testing**: `XUnit` `TestContainers` `Docker`
 
 ## Configuration commands
 
-Frontend (client-app): `npm install` `npm run start` \
-Backend server (dotnet-server): `dotnet run` \
-Testing project (dotnet-server.Tests): `dotnet test`
+Frontend (AngularApp)
+- `npm install`
+- `ng serve`
 
-If commands are not recognized, it is recommended to run the VS Code (or the terminal) with an option "Run as administrator" on Windows.
+Backend (WebApi): 
+- `docker-compose up` (to run Sql Server database)
+- `dotnet run` (with http for local environment)
+
+Integration Tests (WebApi.IntegrationTests): 
+- `dotnet test`
 
 ## Role: Administrator
 
@@ -45,14 +48,14 @@ These are the things that Administrators can accomplish directly on the website 
 - remove a user,
 - get full information about every location and its desks.
 
-## Role: Employee
+## Role: User
 
-**Employees** are able to:
+**Users** are able to:
 
 - **book a desk** - if available,
 - **unbook a desk** - if its their own.
 
-Of course, employees see locations and desks, however they cannot modify them in anyway. Booking is the only exception.
+Of course, users see locations and desks, however they cannot modify them in anyway. Booking is the only exception.
 
 ## Booking
 
@@ -67,20 +70,26 @@ Booking rules:
 
 Endpoints can be accessed easily via Postman or **Swagger**. Swagger is extremely convenient. Here is the sample URL to access it: `http://localhost:5062/swagger/index.html`.
 
-Endpoints usually cannot be accessed without a **validation token**. There are two types of tokens:
-
-- token - user's token,
-- global admin token - available in the `appsettings.json` file on the server-side (of course).
-
-Global admin token is a convenient tool when one needs to, for example, add a new user or alter someone's admin status.
+Endpoints cannot be accessed without a JSON Web Token. The token is generated when the  user logs in and is removed from the session storage when the user logs out.
 
 ## User interface - screenshots
 
 - Main view
-  ![Screenshot1](https://github.com/hynas321/Hot-Desk-Booking-System/assets/76520333/e4ed8615-2ba5-4580-a471-5ecc6ecae303)
+  ![image](https://github.com/user-attachments/assets/9fc0c5a2-e776-453e-a5e8-a0aa6243c803)
 
 - Locations view (from Employee's POV)
-  ![Screenshot2](https://github.com/hynas321/Hot-Desk-Booking-System/assets/76520333/e8383229-c0ca-4815-b489-157bc0d81bef)
+  ![image](https://github.com/user-attachments/assets/0c79ba9a-7cfc-49dc-ad01-df2caa95fa8e)
+
+- Locations view (from Admin's POV - adding a new location popup)
+  ![image](https://github.com/user-attachments/assets/e19b0819-8951-4fd8-a533-46029148812b)
+
+- Locations view (from Admin's POV - removing a location snackbar)
+  ![image](https://github.com/user-attachments/assets/44ba753a-c4e6-493e-9eea-98cb6b84e1fa)
 
 - Desks view (from Administrator's POV)
-  ![Screenshot3](https://github.com/hynas321/Hot-Desk-Booking-System/assets/76520333/5365e499-4332-4e5d-98ec-01c54f9975c3)
+  ![image](https://github.com/user-attachments/assets/083c8b67-49a3-443b-b79f-70c1afea9a25)
+
+- Desks view (from Employee's POV - current booking)
+  ![image](https://github.com/user-attachments/assets/10347503-bc32-4b8f-8c2d-a697d78bc04c)
+
+
