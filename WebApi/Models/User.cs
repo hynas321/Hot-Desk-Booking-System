@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace WebApi.Models;
 public class User
@@ -9,5 +10,6 @@ public class User
 
     public string Role { get; set; } = "User";
 
-    public List<Booking> Bookings { get; set; } = new List<Booking>();
+    [JsonIgnore]
+    public virtual List<Booking> Bookings { get; set; } = new List<Booking>();
 }

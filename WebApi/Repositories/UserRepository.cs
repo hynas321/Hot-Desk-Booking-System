@@ -34,15 +34,11 @@ public class UserRepository : IUserRepository
 
     public async Task<User> GetUserAsync(string username, CancellationToken cancellationToken)
     {
-        return await dbContext.Users
-            .Include(u => u.Bookings)
-            .FirstOrDefaultAsync(user => user.Username == username, cancellationToken);
+        return await dbContext.Users.FirstOrDefaultAsync(user => user.Username == username, cancellationToken);
     }
 
     public async Task<List<User>> GetAllUsersAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.Users
-            .Include(u => u.Bookings)
-            .ToListAsync(cancellationToken);
+        return await dbContext.Users.ToListAsync(cancellationToken);
     }
 }

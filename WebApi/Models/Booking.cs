@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace WebApi.Models;
 
@@ -17,8 +18,10 @@ public class Booking
     public int DeskId { get; set; }
 
     [ForeignKey("DeskId")]
-    public Desk? Desk { get; set; }
+    [JsonIgnore]
+    public virtual Desk? Desk { get; set; }
 
     [ForeignKey("UserId")]
-    public User? User { get; set; }
+    [JsonIgnore]
+    public virtual User? User { get; set; }
 }

@@ -28,15 +28,11 @@ public class LocationRepository : ILocationRepository
 
     public async Task<Location> GetLocationAsync(string locationName, CancellationToken cancellationToken)
     {
-        return await dbContext.Locations
-            .Include(l => l.Desks)
-            .FirstOrDefaultAsync(location => location.LocationName == locationName, cancellationToken);
+        return await dbContext.Locations.FirstOrDefaultAsync(location => location.LocationName == locationName, cancellationToken);
     }
 
     public async Task<List<Location>> GetAllLocationsAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.Locations
-            .Include(l => l.Desks)
-            .ToListAsync(cancellationToken);
+        return await dbContext.Locations.ToListAsync(cancellationToken);
     }
 }

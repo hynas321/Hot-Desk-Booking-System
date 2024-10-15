@@ -16,7 +16,7 @@ public class DeskRepository : IDeskRepository
     }
 
     public async Task AddDeskAsync(Desk desk, CancellationToken cancellationToken)
-    {
+    {        
         await dbContext.Desks.AddAsync(desk, cancellationToken);
         await dbContext?.SaveChangesAsync(cancellationToken);
     }
@@ -35,27 +35,18 @@ public class DeskRepository : IDeskRepository
 
     public async Task<Desk> GetDeskAsync(DeskInformation deskInformation, CancellationToken cancellationToken)
     {
-        return await dbContext.Desks
-            .Include(d => d.Location)
-            .Include(d => d.Bookings)
-            .FirstOrDefaultAsync(
-                d => d.DeskName == deskInformation.DeskName &&
-                     d.Location.LocationName == deskInformation.LocationName, cancellationToken);
+        return await dbContext.Desks.FirstOrDefaultAsync(
+            d => d.DeskName == deskInformation.DeskName &&
+            d.Location.LocationName == deskInformation.LocationName);
     }
 
     public async Task<List<Desk>> GetAllDesksAsync(CancellationToken cancellationToken)
     {
-        return await dbContext.Desks
-            .Include(d => d.Location)
-            .Include(d => d.Bookings)
-            .ToListAsync(cancellationToken);
+        return await dbContext.Desks.ToListAsync();
     }
 
     public List<Desk> GetAllDesks()
     {
-        return dbContext.Desks
-            .Include(d => d.Location)
-            .Include(d => d.Bookings)
-            .ToList();
+        return dbContext.Desks.ToList();
     }
 }

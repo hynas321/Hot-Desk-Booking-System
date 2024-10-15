@@ -149,14 +149,4 @@ public class LocationController : ControllerBase
         _logger.LogInformation("GetAllNames: Status 200, OK");
         return Ok(JsonHelper.Serialize(locationDTO));
     }
-
-    [Authorize(Roles = UserRole.Admin)]
-    [HttpGet("GetAll")]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken = default)
-    {
-        var locations = await _locationService.GetAllLocationsAsync(cancellationToken);
-
-        _logger.LogInformation("GetAll: Status 200, OK");
-        return Ok(JsonHelper.Serialize(locations));
-    }
 }

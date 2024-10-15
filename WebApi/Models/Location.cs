@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace WebApi.Models;
 
@@ -9,5 +10,6 @@ public class Location
 
     public string LocationName { get; set; } = string.Empty;
 
-    public List<Desk> Desks { get; set; } = new List<Desk>();
+    [JsonIgnore]
+    public virtual List<Desk> Desks { get; set; } = new List<Desk>();
 }
