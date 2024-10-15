@@ -19,10 +19,11 @@
     ></app-button>
 
     <app-button
-      *ngIf="isUserAdmin && location.totalDeskCount === 0"
+      *ngIf="user?.isAdmin"
       [text]="'Remove'"
-      [active]="true"
-      [type]="'warn'"
+      [active]="(user?.isAdmin ?? false) && location.totalDeskCount === 0"
+      [type]="'danger'"
+      [spacing]="2"
       (onClick)="handleRemoveClick(location.locationName)"
     ></app-button>
   </li>

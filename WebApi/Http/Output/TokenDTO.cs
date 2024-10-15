@@ -1,6 +1,6 @@
 namespace WebApi.Http;
 
-public class TokenOutput
+public class TokenDTO
 {
 	public string Token { get; set; } = string.Empty;
 }

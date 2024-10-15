@@ -10,6 +10,7 @@ import { UserService } from '../../services/user.service';
 import { Observable } from 'rxjs';
 import { User } from '../../models/User';
 import { ButtonComponent } from '../../components/shared/button/button.component';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-desks-view',
@@ -31,7 +32,8 @@ export class DesksViewComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private userService: UserService
+    private userService: UserService,
+    private alertService: AlertService
   ) {
     this.user$ = userService.user$;
   }
@@ -54,7 +56,7 @@ export class DesksViewComponent implements OnInit {
     });
 
     dialogRef.componentInstance.formSubmitted.subscribe((deskName: string) => {
-      this.handlePopupSubmit(deskName); // Handle popup submission
+      this.handlePopupSubmit(deskName);
     });
   }
 
@@ -68,6 +70,10 @@ export class DesksViewComponent implements OnInit {
         endTime: null,
       };
       this.desks.push(newDesk);
+      this.alertService.showAlert(
+        `Desk "${deskName}" has been added`,
+        'success'
+      );
     });
   }
 
@@ -84,6 +90,10 @@ export class DesksViewComponent implements OnInit {
             bookedDeskLocation: this.locationName,
           };
           this.userService.updateUser(updatedUser);
+          this.alertService.showAlert(
+            `Desk "${deskName}" has been booked`,
+            'success'
+          );
         }
       });
   }
@@ -101,6 +111,10 @@ export class DesksViewComponent implements OnInit {
             bookedDeskLocation: null,
           };
           this.userService.updateUser(updatedUser);
+          this.alertService.showAlert(
+            `Desk "${deskName}" has been unbooked`,
+            'success'
+          );
         }
       });
   }
@@ -108,23 +122,35 @@ export class DesksViewComponent implements OnInit {
   handleRemoveButtonClick(deskName: string): void {
     this.apiService.removeDesk(deskName, this.locationName).subscribe(() => {
       this.desks = this.desks.filter((desk) => desk.deskName !== deskName);
+      this.alertService.showAlert(
+        `Desk "${deskName}" has been removed`,
+        'success'
+      );
     });
   }
 
   handleEnableButtonClick(deskName: string): void {
     this.apiService
       .setDeskAvailability(deskName, this.locationName, true)
-      .subscribe((enabledDesk: Desk) =>
-        this.updateDeskState(deskName, enabledDesk)
-      );
+      .subscribe((enabledDesk: Desk) => {
+        this.updateDeskState(deskName, enabledDesk);
+        this.alertService.showAlert(
+          `Desk "${deskName}" has been enabled`,
+          'success'
+        );
+      });
   }
 
   handleDisableButtonClick(deskName: string): void {
     this.apiService
       .setDeskAvailability(deskName, this.locationName, false)
-      .subscribe((disabledDesk: Desk) =>
-        this.updateDeskState(deskName, disabledDesk)
-      );
+      .subscribe((disabledDesk: Desk) => {
+        this.updateDeskState(deskName, disabledDesk);
+        this.alertService.showAlert(
+          `Desk "${deskName}" has been disabled`,
+          'success'
+        );
+      });
   }
 
   handleDaysRangeChange(value: number): void {

@@ -1,6 +1,6 @@
 namespace WebApi.Http;
 
-public class UserInfoOutput {
+public class UserDTO {
     public string? Username { get; set; }
     public bool IsAdmin { get; set; }
     public DeskDTO? BookedDesk { get; set; }

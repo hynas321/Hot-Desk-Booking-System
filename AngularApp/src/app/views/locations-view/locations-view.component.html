@@ -12,6 +12,7 @@
 
     <app-location-list
       [locations]="locations"
+      [user]="user$ | async"
       (onChooseClick)="handleChooseLocationButtonClick($event)"
       (onRemoveClick)="handleRemoveButtonClick($event)"
     >

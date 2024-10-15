@@ -10,6 +10,7 @@ import { Observable } from 'rxjs';
 import { User } from '../../models/User';
 import { UserService } from '../../services/user.service';
 import { ButtonComponent } from '../../components/shared/button/button.component';
+import { AlertService } from '../../services/alert.service';
 
 @Component({
   selector: 'app-locations-view',
@@ -29,7 +30,8 @@ export class LocationsViewComponent implements OnInit {
     private router: Router,
     private dialog: MatDialog,
     private userService: UserService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private alertService: AlertService
   ) {
     this.user$ = userService.user$;
   }
@@ -55,10 +57,25 @@ export class LocationsViewComponent implements OnInit {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result: string) => {
-      if (result) {
-        this.handlePopupSubmit(result);
+    dialogRef.componentInstance.formSubmitted.subscribe(
+      (locationName: string) => {
+        this.handlePopupSubmit(locationName);
       }
+    );
+  }
+
+  handlePopupSubmit(locationName: string): void {
+    this.apiService.addLocation(locationName).subscribe(() => {
+      const newLocation: Location = {
+        locationName: locationName,
+        totalDeskCount: 0,
+        availableDeskCount: 0,
+      };
+      this.locations.push(newLocation);
+      this.alertService.showAlert(
+        `Location "${locationName}" has been added`,
+        'success'
+      );
     });
   }
 
@@ -67,39 +84,14 @@ export class LocationsViewComponent implements OnInit {
   }
 
   handleRemoveButtonClick(locationName: string): void {
-    this.apiService.removeLocation(locationName).subscribe(
-      (statusCode: number) => {
-        if (statusCode === 200) {
-          this.locations = this.locations.filter(
-            (location) => location.locationName !== locationName
-          );
-        } else {
-          console.error(`Could not remove the location ${locationName}`);
-        }
-      },
-      (error: any) => {
-        console.error('Unexpected error', error);
-      }
-    );
-  }
-
-  handlePopupSubmit(locationName: string): void {
-    this.apiService.addLocation(locationName).subscribe(
-      (statusCode: number) => {
-        if (statusCode === 201) {
-          const newLocation: Location = {
-            locationName,
-            totalDeskCount: 0,
-            availableDeskCount: 0,
-          };
-          this.locations = [...this.locations, newLocation];
-        } else {
-          console.error(`Could not add the location: ${locationName}`);
-        }
-      },
-      (error: any) => {
-        console.error('Unexpected error', error);
-      }
-    );
+    this.apiService.removeLocation(locationName).subscribe(() => {
+      this.locations = this.locations.filter(
+        (location) => location.locationName !== locationName
+      );
+      this.alertService.showAlert(
+        `Location "${locationName}" has been removed`,
+        'success'
+      );
+    });
   }
 }

@@ -16,7 +16,7 @@
       [text]="'Return to locations'"
       [active]="true"
       [type]="'secondary'"
-      [spacing]="2"
+      [spacing]="(user$ | async)?.isAdmin ? 2 : 0"
       (onClick)="handleGoBackButtonClick()"
     ></app-button>
 

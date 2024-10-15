@@ -113,15 +113,15 @@ public class DeskController : ControllerBase
             return NotFound();
         }
 
-        var updatedDesk = await _deskService.SetDeskAvailabilityAsync(deskInfo, deskAvailabilityInfo.IsEnabled, cancellationToken);
+        var updatedDeskDTO = await _deskService.SetDeskAvailabilityAsync(deskInfo, deskAvailabilityInfo.IsEnabled, cancellationToken);
 
-        if (updatedDesk == null)
+        if (updatedDeskDTO == null)
         {
             _logger.LogError("SetDeskAvailability: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
         _logger.LogInformation("SetDeskAvailability: Status 200, OK");
-        return Ok(JsonHelper.Serialize(updatedDesk));
+        return Ok(JsonHelper.Serialize(updatedDeskDTO));
     }
 }

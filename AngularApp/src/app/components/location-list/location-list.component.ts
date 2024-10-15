@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Location } from '../../models/Location';
 import { CommonModule } from '@angular/common';
 import { ButtonComponent } from '../shared/button/button.component';
+import { User } from '../../models/User';
 
 @Component({
   selector: 'app-location-list',
@@ -12,7 +13,7 @@ import { ButtonComponent } from '../shared/button/button.component';
 })
 export class LocationListComponent {
   @Input() locations: Location[] = [];
-  @Input() isUserAdmin: boolean = false;
+  @Input() user: User | null = null;
 
   @Output() onChooseClick = new EventEmitter<string>();
   @Output() onRemoveClick = new EventEmitter<string>();

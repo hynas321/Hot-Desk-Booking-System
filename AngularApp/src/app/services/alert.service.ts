@@ -1,6 +1,10 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+type AlertType = 'success' | 'error' | 'warning' | 'info' | 'secondary';
+type VerticalPosition = 'top' | 'bottom';
+type HorizontalPosition = 'left' | 'center' | 'right';
+
 @Injectable({
   providedIn: 'root',
 })
@@ -9,14 +13,16 @@ export class AlertService {
 
   showAlert(
     message: string,
-    type: string = 'success',
-    duration: number = 3000
+    type: AlertType = 'success',
+    duration: number = 3000,
+    horizontalPosition: HorizontalPosition = 'left',
+    verticalPosition: VerticalPosition = 'top'
   ): void {
     this.snackBar.open(message, 'Close', {
       duration: duration,
-      panelClass: [`mat-${type}`],
-      verticalPosition: 'top',
-      horizontalPosition: 'center',
+      panelClass: [`${type}-snackbar`],
+      horizontalPosition: horizontalPosition,
+      verticalPosition: verticalPosition,
     });
   }
 }
