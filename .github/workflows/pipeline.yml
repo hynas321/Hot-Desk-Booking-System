@@ -49,10 +49,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker and Docker Compose
-        uses: docker/setup-buildx-action@v2
-        with:
-          version: latest
+      - name: Set up Docker (without Buildx)
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose
 
       - name: Start SQL Server via Docker Compose
         run: |
