@@ -1,0 +1,53 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+jobs:
+- job: Build_And_Test
+  displayName: 'Build Angular and .NET Core Applications with Docker Compose'
+  steps:
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '18.x'
+      displayName: 'Install Node.js'
+    
+    - script: |
+        npm install -g @angular/cli
+        cd AngularApp
+        npm install
+      displayName: 'Install Angular dependencies'
+
+    - script: |
+        cd AngularApp
+        ng build --prod
+      displayName: 'Build Angular App'
+
+    - task: UseDotNet@2
+      inputs:
+        packageType: 'sdk'
+        version: '8.x'
+        installationPath: $(Agent.ToolsDirectory)/dotnet
+      displayName: 'Install .NET SDK 8.0'
+
+    - task: DockerCompose@0
+      inputs:
+        containerRegistry: 'dockerhub'
+        action: 'Run services'
+        dockerComposeFile: '$(Build.SourcesDirectory)/docker-compose.yml'
+      displayName: 'Start SQL Server via Docker Compose'
+
+    - script: |
+        cd WebApi
+        dotnet build
+        dotnet test --filter "Category!=Integration"
+      displayName: 'Build and Test .NET Web API'
+
+    - script: |
+        cd WebApi.IntegrationTests
+        dotnet test --filter "Category=Integration"
+      displayName: 'Run Integration Tests'
