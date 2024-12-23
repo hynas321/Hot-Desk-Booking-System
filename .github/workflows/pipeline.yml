@@ -49,7 +49,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Docker (without Buildx)
+      - name: Set up Docker Compose
         run: |
           sudo apt-get update
           sudo apt-get install docker-compose
