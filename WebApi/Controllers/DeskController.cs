@@ -35,7 +35,6 @@ public class DeskController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Add: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -43,7 +42,6 @@ public class DeskController : ControllerBase
 
         if (existingDesk != null)
         {
-            _logger.LogInformation("Add: Status 409, Conflict");
             return Conflict();
         }
 
@@ -51,11 +49,9 @@ public class DeskController : ControllerBase
 
         if (!deskAdded)
         {
-            _logger.LogError("Add: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        _logger.LogInformation("Add: Status 201, Created");
         return CreatedAtAction(nameof(Add), new { deskInfo.DeskName, deskInfo.LocationName });
     }
 
@@ -65,7 +61,6 @@ public class DeskController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Remove: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -73,7 +68,6 @@ public class DeskController : ControllerBase
 
         if (desk == null)
         {
-            _logger.LogInformation("Remove: Status 404, Not Found");
             return NotFound();
         }
 
@@ -81,11 +75,9 @@ public class DeskController : ControllerBase
 
         if (!isRemoved)
         {
-            _logger.LogError("Remove: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        _logger.LogInformation("Remove: Status 200, OK");
         return Ok();
     }
 
@@ -95,7 +87,6 @@ public class DeskController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("SetDeskAvailability: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -109,7 +100,6 @@ public class DeskController : ControllerBase
 
         if (desk == null)
         {
-            _logger.LogInformation("SetDeskAvailability: Status 404, Not Found");
             return NotFound();
         }
 
@@ -117,11 +107,9 @@ public class DeskController : ControllerBase
 
         if (updatedDeskDTO == null)
         {
-            _logger.LogError("SetDeskAvailability: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        _logger.LogInformation("SetDeskAvailability: Status 200, OK");
         return Ok(JsonHelper.Serialize(updatedDeskDTO));
     }
 }

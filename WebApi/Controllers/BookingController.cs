@@ -11,19 +11,16 @@ namespace WebApi.Controllers;
 [Route("api/[controller]")]
 public class BookingController : ControllerBase
 {
-    private readonly ILogger<BookingController> _logger;
     private readonly IDeskService _deskService;
     private readonly IUserService _userService;
     private readonly IBookingService _bookingService;
 
     public BookingController(
-        ILogger<BookingController> logger,
         IDeskService deskService,
         IUserService userService,
         IBookingService bookingService
     )
     {
-        _logger = logger;
         _deskService = deskService;
         _userService = userService;
         _bookingService = bookingService;
@@ -35,7 +32,6 @@ public class BookingController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Book: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -43,7 +39,6 @@ public class BookingController : ControllerBase
 
         if (username == null)
         {
-            _logger.LogInformation("Book: Status 401, Unauthorized");
             return Unauthorized();
         }
 
@@ -59,7 +54,6 @@ public class BookingController : ControllerBase
 
         if (user == null)
         {
-            _logger.LogInformation("Book: Status 401, Unauthorized");
             return Unauthorized();
         }
 
@@ -67,7 +61,6 @@ public class BookingController : ControllerBase
 
         if (deskDTO == null)
         {
-            _logger.LogInformation("Book: Status 409, Conflict");
             return StatusCode(StatusCodes.Status409Conflict);
         }
 
@@ -80,7 +73,6 @@ public class BookingController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Unbook: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -88,7 +80,6 @@ public class BookingController : ControllerBase
 
         if (username == null)
         {
-            _logger.LogInformation("Unbook: Status 401, Unauthorized");
             return Unauthorized();
         }
 
@@ -103,7 +94,6 @@ public class BookingController : ControllerBase
 
         if (deskDTO == null)
         {
-            _logger.LogInformation("Book: Status 409, Conflict");
             return StatusCode(StatusCodes.Status409Conflict);
         }
 

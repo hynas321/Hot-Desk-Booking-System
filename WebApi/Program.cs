@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using WebApi.Http;
+using WebApi.Middleware;
 using WebApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestResponseLoggingMiddleware>();
 
 app.UseCors("AllowReactApp");
 app.UseHttpsRedirection();
