@@ -42,13 +42,11 @@ public class LocationController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Add: Status 400, Bad Request");
             return BadRequest();
         }
 
         if (await _locationService.GetLocationAsync(locationName.Name, cancellationToken) != null)
         {
-            _logger.LogInformation("Add: Status 409, Conflict");
             return Conflict();
         }
 
@@ -60,7 +58,6 @@ public class LocationController : ControllerBase
 
         await _locationService.AddLocationAsync(location, cancellationToken);
 
-        _logger.LogInformation("Add: Status 201, Created");
         return CreatedAtAction(nameof(Add), new { locationName = location.LocationName });
     }
 
@@ -70,7 +67,6 @@ public class LocationController : ControllerBase
     {
         if (!ModelState.IsValid)
         {
-            _logger.LogError("Remove: Status 400, Bad Request");
             return BadRequest();
         }
 
@@ -78,7 +74,6 @@ public class LocationController : ControllerBase
 
         if (location == null)
         {
-            _logger.LogInformation("Remove: Status 404, Not Found");
             return NotFound();
         }
 
@@ -86,11 +81,9 @@ public class LocationController : ControllerBase
 
         if (!isRemoved)
         {
-            _logger.LogError("Remove: Status 500, Internal Server Error");
             return StatusCode(StatusCodes.Status500InternalServerError);
         }
 
-        _logger.LogInformation("Remove: Status 200, OK");
         return Ok();
     }
 
@@ -102,7 +95,6 @@ public class LocationController : ControllerBase
 
         if (location == null)
         {
-            _logger.LogInformation("GetDesks: Status 404, Not Found");
             return NotFound();
         }
 
@@ -129,7 +121,6 @@ public class LocationController : ControllerBase
             };
         }).ToList();
 
-        _logger.LogInformation("GetDesks: Status 200, OK");
         return Ok(JsonHelper.Serialize(desksDTO));
     }
 
@@ -146,7 +137,6 @@ public class LocationController : ControllerBase
             AvailableDeskCount = loc.Desks.Count(d => !d.Bookings.Any() && d.IsEnabled)
         }).ToList();
 
-        _logger.LogInformation("GetAllNames: Status 200, OK");
         return Ok(JsonHelper.Serialize(locationDTO));
     }
 }
